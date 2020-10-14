@@ -1,3 +1,11 @@
+from dotenv import load_dotenv
+from pathlib import Path
+
+# quick workaround to store LD_LIBRARY_PATH (and other server stuff actually) in .env file
+env_path = Path('..') / '.env'
+load_dotenv(env_path)
+
+# flake8: noqa
 import _pyindigo
 from astropy.io.fits import HDUList
 
