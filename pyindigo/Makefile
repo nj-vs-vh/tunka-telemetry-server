@@ -37,13 +37,6 @@ ${CCD_CLIENT_LIB}: ${CCD_CLIENT_OBJECT} | ${BINDIR}
 INDIGO_VENV_NAME = indgenv
 INDIGO_VENV_PATH = ../${INDIGO_VENV_NAME}
 
-${INDIGO_VENV_PATH}:
-	cd ..
-	python3 -m venv ${INDIGO_VENV_NAME}
-	bash -c ". ${INDIGO_VENV_NAME}/bin/activate;"
-	pip3 install -r requirements.txt
-	cd pyindigo
-
 
 PYTHON_INSTALLATION_LOG = setup_py_installation_log.txt
 

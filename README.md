@@ -15,12 +15,21 @@ cd camera-server
 git clone https://github.com/indigo-astronomy/indigo.git
 cd indigo
 make all
+cd ..
+```
+
+3. Создать виртуальное окружение для Python
+
+```bash
+python3 -m venv indgenv
+. indgenv/bin/activate
+pip3 install -r requirements.txt
 ```
 
 3. Скомпилировать кастомный CCD-клиент и модуль-расширение Python. На этом шаге `make` автоматически создаст виртуальное окружения с нужной версией Python и всеми зависимостями; скомпилирует Indigo-клиент; скомпилирует и построит расширение Python с интерфейсом для Indigo.
 
 ```bash
-cd ../pyindigo
+cd pyindigo
 make install
 ```
 
