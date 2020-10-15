@@ -212,3 +212,6 @@ experiments
 *build*
 *.txt
 *.fits
+*.jpeg
+*.jpg
+*.png
