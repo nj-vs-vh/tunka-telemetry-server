@@ -8,11 +8,15 @@ module = Extension(
     sources=['_pyindigo.c'],
     library_dirs=['./bin', '../indigo/build/lib/'],
     libraries=['pyindigo_ccd_client', 'indigo'],
-    extra_compile_args=[f'-I{indigo_root}/indigo_libs', f'-L{indigo_root}/build/lib'],
+    extra_compile_args=[
+        f'-I{indigo_root}/indigo_libs',
+        f'-L{indigo_root}/build/lib',
+        f'-Wl,-rpath="{indigo_root}/build/lib/"'
+    ],
 )
 
 setup(
-    name='pyindigo',
+    name='_pyindigo',
     version='0.1.0',
     author='Igor Vaiman',
     author_email='gosha.vaiman@gmail.com',

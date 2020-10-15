@@ -1,0 +1,20 @@
+from astropy.io.fits import HDUList
+from pathlib import Path
+from datetime import datetime
+
+from pyindigo import camera
+from pyindigo.callback_utils import prints_errors, accepts_hdu_list
+
+
+images_path = Path('../images')
+
+
+@prints_errors
+@accepts_hdu_list
+def save_fits_to_file(hdul: HDUList):
+    hdul.writeto(images_path / f'IMG_{datetime.now().strftime("%Y_%m_%d_%X")}.fits')
+
+
+camera.take_shot(0.1, 100, save_fits_to_file)
+
+camera.wait_for_exposure()
