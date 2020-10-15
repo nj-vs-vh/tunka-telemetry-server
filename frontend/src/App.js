@@ -25,9 +25,7 @@ class CameraImage extends Component {
   componentDidMount() {
     fetch(
       '/api/latest-shot',
-      { headers: {
-        "Cache-Control": "no-cache"
-      }}
+      { headers: {"Cache-Control": "no-cache"} }
     )
     .then(response => {
       if (!response.ok) {

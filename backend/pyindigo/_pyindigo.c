@@ -52,8 +52,14 @@ set_device_name(PyObject* self, PyObject* args)
 static PyObject*
 get_current_device_name(PyObject* self)
 {
-
     return Py_BuildValue("s", ccd_device_name);
+}
+
+
+static PyObject*
+check_if_device_is_connected(PyObject* self)
+{
+    return Py_BuildValue("i", device_connected);
 }
 
 
@@ -150,6 +156,7 @@ static PyMethodDef methods[] = {
     {"version", (PyCFunction)version, METH_NOARGS, "pyindigo core version"},
     {"set_device_name", (PyCFunction)set_device_name, METH_VARARGS, ""},
     {"get_current_device_name", (PyCFunction)get_current_device_name, METH_NOARGS, ""},
+    {"check_if_device_is_connected", (PyCFunction)check_if_device_is_connected, METH_NOARGS, ""},
     {"setup_ccd_client", (PyCFunction)setup_ccd_client, METH_VARARGS, "start INDIGO bus, attach driver and devices"},
     {"cleanup_ccd_client", (PyCFunction)cleanup_ccd_client, METH_NOARGS, "detach driver and devices, stop INDIGO bus"},
     {"set_shot_processing_callback", (PyCFunction)set_shot_processing_callback, METH_VARARGS, "store new callback"},

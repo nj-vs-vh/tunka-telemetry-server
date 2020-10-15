@@ -53,6 +53,9 @@ def take_shot(exposure, gain, callback):
     other handy features to your callback
     """
     global _exposing
+    if not _pyindigo.check_if_device_is_connected():
+        _exposing = False  # prevent mess if device is disconnected while exposing
+        return
     if _exposing:
         return
     _pyindigo.set_gain(float(gain))

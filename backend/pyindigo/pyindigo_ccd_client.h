@@ -2,6 +2,8 @@
 
 #include <indigo/indigo_client.h>
 
+extern bool device_connected;
+
 extern char *ccd_device_name;
 
 extern indigo_client ccd_client;
