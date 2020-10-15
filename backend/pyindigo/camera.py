@@ -24,7 +24,7 @@ from pathlib import Path
 import _pyindigo
 
 
-env_path = (Path(__file__).parent / '../../.env').resolve()
+env_path = (Path(__file__).parent / '../.indigoenv').resolve()
 load_dotenv(env_path)
 
 camera_mode = os.environ.get('CAMERA_MODE', None)
@@ -52,10 +52,12 @@ def take_shot(exposure, gain, callback):
     Note: use decorators from pyindigo.callback_utils to automatically add error catching, HDUList conversion and
     other handy features to your callback
     """
+    global _exposing
+    if _exposing:
+        return
     _pyindigo.set_gain(float(gain))
     time.sleep(0.1)  # safety delay to let gain be accepted by device
     _pyindigo.set_shot_processing_callback(_set_exposing_to_false_decorator(callback))
-    global _exposing
     _exposing = True
     _pyindigo.take_shot_with_exposure(float(exposure))
 

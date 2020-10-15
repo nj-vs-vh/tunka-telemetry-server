@@ -17,12 +17,18 @@ class CameraImage extends Component {
     super();
     this.state = {
       current_shot_url: null,
-      loading: true
+      loading: true,
+      error: false
     }
   }
 
   componentDidMount() {
-    fetch('https://picsum.photos/192/108')
+    fetch(
+      '/api/latest-shot',
+      { headers: {
+        "Cache-Control": "no-cache"
+      }}
+    )
     .then(response => {
       if (!response.ok) {
         throw Error("Error fetching data from server!")

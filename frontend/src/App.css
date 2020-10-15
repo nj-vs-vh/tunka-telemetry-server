@@ -10,7 +10,7 @@
 
 .App-header {
   background-color: #dfeaff;
-  height: 15vh;
+  height: 15%;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -20,24 +20,25 @@
 }
 
 .camera-image-container {
+  padding: 5%;
   display: flex;
-  height: 90%;
-  width: 50%;
+  height: 85%;
+  max-width: 60%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
 .camera-image {
-  /* height: 75%; */
   width: 100%;
-  /* object-fit: contain; */
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .metadata-string {
   margin-top: 10px;
   margin-left: 5px;
-  text-align: left;
+  /* text-align: left; */
   width: 100%;
 }
 

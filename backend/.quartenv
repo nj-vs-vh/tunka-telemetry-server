@@ -1,0 +1,3 @@
+QUART_APP=app.py
+QUART_ENV=development
+QUART_DEBUG=0
