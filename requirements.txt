@@ -5,10 +5,13 @@ attrs==20.2.0
 backcall==0.2.0
 bleach==3.2.1
 cffi==1.14.3
+click==7.1.2
 decorator==4.4.2
 defusedxml==0.6.0
 entrypoints==0.3
 flake8==3.8.4
+Flask==1.1.2
+itsdangerous==1.1.0
 jedi==0.17.2
 Jinja2==2.11.2
 jsonschema==3.2.0
@@ -26,6 +29,7 @@ pandocfilters==1.4.2
 parso==0.7.1
 pexpect==4.8.0
 pickleshare==0.7.5
+Pillow==8.0.0
 prometheus-client==0.8.0
 prompt-toolkit==3.0.7
 ptyprocess==0.6.0
@@ -48,4 +52,5 @@ tornado==6.0.4
 traitlets==5.0.4
 wcwidth==0.2.5
 webencodings==0.5.1
+Werkzeug==1.0.1
 widgetsnbextension==3.5.1
