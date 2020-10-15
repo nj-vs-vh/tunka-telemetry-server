@@ -2,7 +2,6 @@ import asyncio
 import time
 
 from datetime import datetime
-from pathlib import Path
 from astropy.io.fits import HDUList
 import base64
 from io import BytesIO
