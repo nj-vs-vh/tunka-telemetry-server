@@ -16,40 +16,42 @@ class CameraImage extends Component {
   constructor() {
     super();
     this.state = {
-      current_shot_url: null,
-      loading: true,
-      error: false
+      latest_shot_base64: null,
+      loading: false,
     }
   }
 
-  componentDidMount() {
-    fetch(
-      '/api/latest-shot',
-      { headers: {"Cache-Control": "no-cache"} }
-    )
+  componentDidMount () {
+    this.setState({loading: true})
+    var intervalId = setInterval(this.fetchLatestShotInBase64.bind(this), 100);
+    this.setState({intervalId: intervalId});
+  }
+
+  componentWillUnmount () {
+    clearInterval(this.state.intervalId);
+  }
+
+  fetchLatestShotInBase64() {
+    fetch('/api/latest-shot')
     .then(response => {
-      if (!response.ok) {
-        throw Error("Error fetching data from server!")
-      }
-      return response.url
+      if (!response.ok) { console.log(response) }
+      return response.text()
     })
-    .then(url => {
-      this.setState(
-        {
-          current_shot_url: url,
-          loading: false
-        }
-      )
-    })
-    .catch(err => {throw Error(err.message)});
+    .then(base64 => {
+      this.setState({latest_shot_base64: base64, loading: false
+    })})
+    .catch(err => {
+      clearInterval(this.state.intervalId);
+      throw Error(err.message)
+    });
   }
 
   render () {
     return <div className="camera-image-container">
       {
         this.state.loading ?
-          (<div className="camera-image">Loading image...</div>)
-        : (<img src={this.state.current_shot_url} alt="" className="camera-image"></img>)
+          (<div className="camera-image">Loading...</div>)
+        : (<img src={`data:image/jpeg;base64,${this.state.latest_shot_base64}`} alt="" className="camera-image"></img>)
       }
       <div className="metadata-string">Some image metadata...</div>
     </div>

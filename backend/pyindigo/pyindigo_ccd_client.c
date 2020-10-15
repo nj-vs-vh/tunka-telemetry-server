@@ -35,7 +35,7 @@
 #include "_pyindigo.h"
 
 char* ccd_device_name;
-static bool device_connected = false;
+bool device_connected = false;
 
 static indigo_result ccd_client_attach(indigo_client *client) {
 	indigo_log("attached to INDIGO bus...");

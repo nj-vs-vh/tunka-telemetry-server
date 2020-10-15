@@ -30,6 +30,7 @@
 }
 
 .camera-image {
+  min-height: 60%;
   width: 100%;
   max-height: 100%;
   object-fit: contain;

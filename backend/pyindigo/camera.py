@@ -45,6 +45,8 @@ time.sleep(5)  # workaround to give camera time to connect before usage
 
 atexit.register(_pyindigo.cleanup_ccd_client)
 
+_exposing = False
+
 
 def take_shot(exposure, gain, callback):
     """Request new shot from camera with given gain, exposure and callback for processing

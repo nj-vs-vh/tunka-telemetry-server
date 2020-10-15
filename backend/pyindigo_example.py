@@ -18,6 +18,6 @@ def save_fits_to_file(hdul: HDUList):
     save_fits_as_jpeg(hdul, images_path / f'IMG_{datetime.now().strftime("%Y_%m_%d_%X")}.jpeg')
 
 
-camera.take_shot(0.1, 100, save_fits_to_file)
+camera.take_shot(0.01, 10, save_fits_to_file)
 
 camera.wait_for_exposure()
