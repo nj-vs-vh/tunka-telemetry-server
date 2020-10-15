@@ -35,7 +35,7 @@ ${CCD_CLIENT_LIB}: ${CCD_CLIENT_OBJECT} | ${BINDIR}
 # python extension building and installation to virtual environment
 
 INDIGO_VENV_NAME = indgenv
-INDIGO_VENV_PATH = ../${INDIGO_VENV_NAME}
+INDIGO_VENV_PATH = ../../${INDIGO_VENV_NAME}
 
 
 PYTHON_INSTALLATION_LOG = setup_py_installation_log.txt

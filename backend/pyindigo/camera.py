@@ -24,7 +24,7 @@ from pathlib import Path
 import _pyindigo
 
 
-env_path = (Path(__file__).parent / '../.env').resolve()
+env_path = (Path(__file__).parent / '../../.env').resolve()
 load_dotenv(env_path)
 
 camera_mode = os.environ.get('CAMERA_MODE', None)

@@ -2,13 +2,13 @@ from flask import Flask
 from pathlib import Path
 from astropy.io.fits import HDUList
 
-from ..pyindigo import camera
-from ..pyindigo.callback_utils import prints_errors, accepts_hdu_list
+from pyindigo import camera
+from pyindigo.callback_utils import prints_errors, accepts_hdu_list
 
-from .fitsutils import save_fits_as_jpeg
+from fitsutils import save_fits_as_jpeg
 
 
-static_dir = Path('static')
+static_dir = Path(__file__).parent / 'static'
 current_shot_path = static_dir / 'current_shot.jpeg'
 
 
@@ -30,6 +30,8 @@ app = Flask(__name__)
 
 @app.route('/api/latest-shot')
 def get_latest_shot():
+    print('accepted!')
+    print(str(current_shot_path))
     return app.send_static_file(str(current_shot_path))
 
 

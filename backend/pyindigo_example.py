@@ -5,10 +5,10 @@ from datetime import datetime
 from pyindigo import camera
 from pyindigo.callback_utils import prints_errors, accepts_hdu_list
 
-from api.fitsutils import save_fits_as_jpeg
+from fitsutils import save_fits_as_jpeg
 
 
-images_path = Path('images')
+images_path = Path('images').resolve()
 
 
 @prints_errors
