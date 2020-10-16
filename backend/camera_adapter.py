@@ -11,6 +11,8 @@ from pyindigo.callback_utils import prints_errors, accepts_hdu_list
 
 import fitsutils
 
+from camera_config import config as camera_config
+
 
 class CameraAdapter:
     """Adapter for pyindigo camera, handling high-level asyncronous operation, configuration, etc
@@ -22,19 +24,17 @@ class CameraAdapter:
 
     def __init__(self):
         self.terminal_failure = False
+        self.camera_lock = asyncio.Lock()
 
         self.preview: bytes = None
         self.preview_metadata: dict = None
         self.new_preview = asyncio.Event()
 
-        # TODO: read these from config file and make dependent on time
-        self.shooting_period = 2
-        self.gain = 30
-        self.exposure = 0.02
-
         # take at least one shot on initialization to begin with
-        camera.take_shot(self.exposure, self.gain, self._preview_generation_callback)
-        camera.wait_for_exposure()
+        camera_init_loop = asyncio.get_event_loop()
+        camera_init_loop.create_task(self.operate())
+        camera_init_loop.run_until_complete(self.new_preview.wait())
+        # camera_init_loop.close()
 
     def connected(self):
         return camera.connected()
@@ -51,22 +51,33 @@ class CameraAdapter:
             if not camera.connected():
                 self.terminal_failure = True
 
-    async def operation(self):
+    async def operate(self):
         """All operations by camera ready to be run concurrently.
 
         This is the only coroutine that should be launched from outside!"""
         return await asyncio.gather(
-            self._run_preview_live_stream(),
+            self._regularly_take_shots(camera_config['preview'], self._preview_generation_callback),
+            self._regularly_take_shots(camera_config['testing'], self._testing_callback)
         )
 
-    async def preview_feed_generator(self):
-        """Async generator for outside use yielding new preview shots as they arise"""
-        while True:
-            await self.new_preview.wait()
-            self.new_preview.clear()
-            yield self.preview, self.preview_metadata
+    def _regularly_take_shots(self, config_entry, callback):
+        """Coroutine factory, return coroutine that regularly takes shots with given
+        period, gain, exposure and callback. Conflicts are resolved with lock"""
 
-    # "private" methods
+        if config_entry['enabled'] is False:
+            fut = asyncio.Future()
+            fut.cancel()
+            return fut
+
+        async def coro():
+            """The actual coroutine that can be put into an event loop"""
+            while True:
+                start = time.time()
+                camera.take_shot(config_entry['exposure'], config_entry['gain'], callback)
+                duration = time.time() - start
+                await asyncio.sleep(max(config_entry['period'] - duration, 0))
+
+        return coro()
 
     @prints_errors
     @accepts_hdu_list
@@ -77,14 +88,17 @@ class CameraAdapter:
         self.preview = inmem_file.getvalue()
         self.preview_metadata = fitsutils.extract_metadata(hdul)
         self.new_preview.set()
+        print('hello from preview!')
 
-    async def _run_preview_live_stream(self):
-        """Coroutine requesting new shot from camera with given period, converting it to jpeg and extracting metadata"""
+    async def preview_feed_generator(self):
+        """Async generator yielding new preview shots as they arise, for outside use"""
         while True:
-            exposure_start = time.time()
-            camera.take_shot(self.exposure, self.gain, self._preview_generation_callback)
-            exposure_duration = time.time() - exposure_start
-            await asyncio.sleep(self.shooting_period - exposure_duration)
+            await self.new_preview.wait()
+            self.new_preview.clear()
+            yield self.preview, self.preview_metadata
+
+    def _testing_callback(self, *args):
+        print('hello from testing!')
 
     @staticmethod
     def _generate_image_name(prefix: str, format_: str) -> str:
@@ -94,4 +108,6 @@ class CameraAdapter:
 
 if __name__ == "__main__":
     camera_adapter = CameraAdapter()
-    asyncio.run(camera_adapter.operation())
+    loop = asyncio.get_event_loop()
+    loop.create_task(camera_adapter.operate())
+    loop.run_forever()

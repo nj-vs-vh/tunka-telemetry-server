@@ -4,6 +4,8 @@ from quart import Quart, Response
 
 from camera_adapter import CameraAdapter
 
+import camera_config
+
 
 camera = CameraAdapter()
 
@@ -38,7 +40,9 @@ async def force_camera_reconnect():
 # running camera and server concurrently in asyncio event loop
 
 loop = asyncio.get_event_loop()
-loop.create_task(camera.operation())
+
+loop.create_task(camera.operate())
+loop.create_task(camera_config.update_on_the_fly())
 app.run(debug=False, use_reloader=False, loop=loop)
 
 loop.run_forever()

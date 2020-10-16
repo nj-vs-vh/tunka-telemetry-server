@@ -67,7 +67,7 @@ def take_shot(exposure, gain, callback):
         _exposing = False  # prevent mess if device is disconnected while exposing
         return
     if _exposing:
-        print(f'{DEVICE} is exposing at the time!')
+        # print(f'{DEVICE} is exposing at the time!')
         return
     _pyindigo.set_gain(float(gain))
     time.sleep(0.1)  # safety delay to let gain be accepted by device
