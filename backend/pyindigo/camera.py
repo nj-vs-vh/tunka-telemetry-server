@@ -36,7 +36,9 @@ elif camera_mode == 'Real':
     DRIVER = 'indigo_ccd_asi'
     DEVICE = 'ZWO ASI120MC-S #0'  # hard-coded until pyindigo upgrade
 else:
-    raise OSError("CAMERA_MODE environment variable must be set to 'Real' or 'Simulator' (preferably in .env file)")
+    raise OSError(
+        "CAMERA_MODE environment variable must be set to 'Real' or 'Simulator' (preferably in .indigoenv file)"
+    )
 
 
 _pyindigo.set_device_name(DEVICE)
@@ -65,6 +67,7 @@ def take_shot(exposure, gain, callback):
         _exposing = False  # prevent mess if device is disconnected while exposing
         return
     if _exposing:
+        print(f'{DEVICE} is exposing at the time!')
         return
     _pyindigo.set_gain(float(gain))
     time.sleep(0.1)  # safety delay to let gain be accepted by device

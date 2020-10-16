@@ -20,9 +20,9 @@ def save_fits_as_jpeg(hdul: HDUList, filename: str):
 
 fits_fields_to_metadata_fields = {
     'EXPTIME': 'exposure',
-    'CCD-TEMP': 'device temperature',
+    'CCD-TEMP': 'device_temperature',
     'GAIN': 'gain',
-    'DATE-OBS': 'device time'
+    'DATE-OBS': 'device_time'
 }
 
 
