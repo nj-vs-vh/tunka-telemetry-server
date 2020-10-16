@@ -1,12 +1,9 @@
 import asyncio
 
 from quart import Quart
-from pathlib import Path
 
 from camera_adapter import CameraAdapter
 
-
-static_dir = Path(__file__).parent / 'static'
 
 camera = CameraAdapter()
 
@@ -24,11 +21,10 @@ async def latest_shot_metadata():
     return camera.latest_preview_metadata
 
 
-# running camera and server loop concurrently in asyncio event loop
+# running camera and server concurrently in asyncio event loop
 
 loop = asyncio.get_event_loop()
 loop.create_task(camera.operation())
-
 app.run(debug=False, use_reloader=False, loop=loop)
 
 loop.run_forever()
