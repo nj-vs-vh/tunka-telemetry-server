@@ -5,6 +5,7 @@ from datetime import datetime
 from astropy.io.fits import HDUList
 import base64
 from io import BytesIO
+from importlib import reload
 
 from pyindigo import camera
 from pyindigo.callback_utils import prints_errors, accepts_hdu_list
@@ -25,12 +26,22 @@ class CameraAdapter:
         self.latest_preview_metadata = None
 
         # TODO: read these from config file and make dependent on time
-        self.shooting_period = 1
+        self.shooting_period = 2
         self.gain = 30
         self.exposure = 0.02
 
         # take at least one shot on initialization to begin with
         camera.take_shot(self.exposure, self.gain, self.preview_generating_callback)
+
+    def reconnect(self):
+        """Experimental method for when we want to reconnect to camera by restarting whole INDIGO interface"""
+        if camera.connected():
+            return
+        else:
+            print('Reloading INDIGO interface...')
+            camera.unload_pyindigo()
+            time.sleep(1)
+            reload(camera)
 
     @prints_errors
     @accepts_hdu_list
@@ -40,6 +51,7 @@ class CameraAdapter:
         inmem_file.seek(0)
         self.latest_preview_base64 = base64.b64encode(inmem_file.getvalue())
         self.latest_preview_metadata = fitsutils.extract_metadata(hdul)
+        print('inmemory file created and encoded to base64')
 
     async def generate_previews_regularly(self):
         """Main coroutine to take shots with camera each several seconds"""
@@ -54,7 +66,7 @@ class CameraAdapter:
 
         All coroutines (i.e. previews, processing) should be gathered here to launch concurrently"""
         return await asyncio.gather(
-            self.generate_previews_regularly()
+            self.generate_previews_regularly(),
         )
 
     @staticmethod

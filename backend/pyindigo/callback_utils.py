@@ -1,3 +1,6 @@
+"""Useful decorators to simplify creating callbacks to be passed to INDIGO"""
+
+
 from typing import Callable
 
 from astropy.io.fits import HDUList
@@ -14,7 +17,7 @@ def handles_errors(error_handler: Callable) -> Callable:
     it's a decorator FACTORY, not decorator itself
 
     >>> @handles_errors()
-    >>> @any_other_pyindigo_decorator
+    >>> @any_other_decorator
     >>> ...
     >>> def my_custom_callback(str):
     >>>     process_string_from_INDIGO(str)
@@ -32,7 +35,7 @@ def handles_errors(error_handler: Callable) -> Callable:
 
 
 def error_printer(e: Exception):
-    """Simples error handler for handles_errors decorator"""
+    """Simple error handler for handles_errors decorator factory"""
     print(f'Exception occured in INDIGO callback: {e}')
 
 
@@ -40,7 +43,7 @@ prints_errors = handles_errors(error_handler=error_printer)
 
 
 def accepts_hdu_list(callback: Callable) -> Callable:
-    """Decorator to automatically convert all bytes object passed from INDIGO
+    """Decorator to automatically tries to convert all bytes object passed to callback
     to astropy's HDULists representing inmemory FITS files
 
     Useful for take_shot calbacks to work with HDUList on user level"""

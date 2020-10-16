@@ -43,7 +43,13 @@ _pyindigo.set_device_name(DEVICE)
 _pyindigo.setup_ccd_client(DRIVER)
 time.sleep(5)  # workaround to give camera time to connect before usage
 
-atexit.register(_pyindigo.cleanup_ccd_client)
+
+def unload_pyindigo():
+    """Direct wrapper of internal INDIGO unloading, but can be called from outside (see CameraAdapter reload method)"""
+    _pyindigo.cleanup_ccd_client()
+
+
+atexit.register(unload_pyindigo)
 
 _exposing = False
 
@@ -62,9 +68,13 @@ def take_shot(exposure, gain, callback):
         return
     _pyindigo.set_gain(float(gain))
     time.sleep(0.1)  # safety delay to let gain be accepted by device
-    _pyindigo.set_shot_processing_callback(_set_exposing_to_false_decorator(callback))
+    _pyindigo.set_shot_processing_callback(_report_on_exposition_end(callback))
     _exposing = True
     _pyindigo.take_shot_with_exposure(float(exposure))
+
+
+def connected():
+    return _pyindigo.check_if_device_is_connected()
 
 
 def wait_for_exposure():
@@ -74,7 +84,7 @@ def wait_for_exposure():
         time.sleep(0.1)
 
 
-def _set_exposing_to_false_decorator(callback):
+def _report_on_exposition_end(callback):
     """Camera's internal decorator letting camera object know when exposure is finished"""
     def decorated_callback(*args):
         callback(*args)
