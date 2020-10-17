@@ -20,6 +20,9 @@ import atexit
 
 from dotenv import load_dotenv
 from pathlib import Path
+from enum import Enum
+from numbers import Number
+from typing import Callable
 
 import _pyindigo
 
@@ -29,16 +32,24 @@ load_dotenv(env_path)
 
 camera_mode = os.environ.get('CAMERA_MODE', None)
 
+
+# device names are hard-coded until pyindigo upgrade
 if camera_mode == 'Simulator':
     DRIVER = 'indigo_ccd_simulator'
-    DEVICE = 'CCD Imager Simulator'  # hard-coded until pyindigo upgrade
+    DEVICE = 'CCD Imager Simulator'
 elif camera_mode == 'Real':
     DRIVER = 'indigo_ccd_asi'
-    DEVICE = 'ZWO ASI120MC-S #0'  # hard-coded until pyindigo upgrade
+    DEVICE = 'ZWO ASI120MC-S #0'
 else:
     raise OSError(
         "CAMERA_MODE environment variable must be set to 'Real' or 'Simulator' (preferably in .indigoenv file)"
     )
+
+
+class ColorMode(Enum):
+    """Color mode as recognized by set_ccd_mode _pyindigo function"""
+    GREYSCALE = 0
+    RGB = 1
 
 
 _pyindigo.set_device_name(DEVICE)
@@ -56,7 +67,7 @@ atexit.register(unload_pyindigo)
 _exposing = False
 
 
-def take_shot(exposure, gain, callback):
+def take_shot(exposure: Number, gain: Number, color_mode: ColorMode = None, callback: Callable = lambda *args: None):
     """Request new shot from camera with given gain, exposure and callback for processing
 
     Note: use decorators from pyindigo.callback_utils to automatically add error catching, HDUList conversion and
@@ -67,8 +78,11 @@ def take_shot(exposure, gain, callback):
         _exposing = False  # prevent mess if device is disconnected while exposing
         return
     if _exposing:
-        # print(f'{DEVICE} is exposing at the time!')
+        print(f'{DEVICE} is exposing at the time!')
         return
+    if color_mode is None:
+        color_mode = ColorMode.RGB
+    _pyindigo.set_ccd_mode(color_mode.value)
     _pyindigo.set_gain(float(gain))
     time.sleep(0.1)  # safety delay to let gain be accepted by device
     _pyindigo.set_shot_processing_callback(_report_on_exposition_end(callback))
@@ -97,11 +111,14 @@ def _report_on_exposition_end(callback):
 
 
 if __name__ == "__main__":
-    def dummy_callback(b: bytes):
-        print('callback run!')
-        global callback_run
-        callback_run = True
+    from callback_utils import prints_errors, accepts_hdu_list
+    from astropy.io.fits import HDUList
 
-    callback_run = False
-    take_shot(1, 50, dummy_callback)
+    @prints_errors
+    @accepts_hdu_list
+    def dummy_callback(hdul: HDUList):
+        print('callback run!')
+        hdul.writeto('bw.fits')
+
+    take_shot(0.01, 30, ColorMode.GREYSCALE, dummy_callback)
     wait_for_exposure()

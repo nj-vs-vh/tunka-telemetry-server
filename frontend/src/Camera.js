@@ -1,5 +1,7 @@
 import React, { Component, useState, useEffect } from 'react';
 
+import './Camera.css';
+
 
 // var cameraConnected = false
 
@@ -34,7 +36,7 @@ export function CameraMetadataFeed() {
     const [currentMetadata, setMetadata] = useState(null)
     
     useEffect( () => {
-        let interval = setInterval(() => {fetchLatestMetadata(setMetadata)}, 1000)
+        let interval = setInterval(() => {fetchLatestMetadata(setMetadata)}, 3000)
         return function cleanup() {
             clearInterval(interval);
         }
@@ -44,11 +46,18 @@ export function CameraMetadataFeed() {
         return <div>Loading...</div>
     }
     else {
-        return <table>
-                    <tr><th>Exposure</th><th>{currentMetadata.exposure}</th></tr>
-                    <tr><th>Gain</th><th>{currentMetadata.gain}</th></tr>
-                    <tr><th>Device temperature</th><th>{currentMetadata.device_temperature}</th></tr>
-                    <tr><th>Device time</th><th>{currentMetadata.device_time}</th></tr>
-                </table>
+        return <div className="metadata-block">
+            <table>
+                <tr><th>Exposure</th><th>{currentMetadata.exposure}</th></tr>
+                <tr><th>Gain</th><th>{currentMetadata.gain}</th></tr>
+                <tr><th>Device temperature</th><th>{currentMetadata.device_temperature}</th></tr>
+                <tr>
+                    <th>Device datetime</th>
+                    <th>{
+                        new Date( Date.parse(currentMetadata.device_time) ).toLocaleString()
+                    }</th>
+                </tr>
+            </table>
+        </div>
     }
 }

@@ -8,13 +8,14 @@ from typing import Dict, Any
 
 def save_fits_as_jpeg(hdul: HDUList, filename: str):
     data: np.ndarray = hdul[0].data
-    vmin = data.min()
-    vmax = data.max()
-    data = (data - vmin)/(vmax - vmin)
-    data = (255*data).astype(np.uint8)
+    # vmin = data.min()
+    # vmax = data.max()
+    # data = (data - vmin)/(vmax - vmin)
+    # data = (255*data).astype(np.uint8)
     # data = data[::-1, :]
+    data = np.transpose(data, (1, 2, 0))
 
-    image = Image.fromarray(data, 'L')
+    image = Image.fromarray(data, 'RGB')
     image.save(filename, format='jpeg')
 
 

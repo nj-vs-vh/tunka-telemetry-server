@@ -17,7 +17,9 @@ async def camera_feed():
     async def preview_feed():
         async for image, _ in camera.preview_feed_generator():
             yield b"--shot\r\n" + b"Content-Type: image/jpeg\r\n\r\n" + image + b"\r\n"
-    return Response(preview_feed(), mimetype="multipart/x-mixed-replace; boundary=shot")
+    res = Response(preview_feed(), mimetype="multipart/x-mixed-replace; boundary=shot")
+    res.timeout = None
+    return res
 
 
 @app.route('/api/latest-camera-metadata')

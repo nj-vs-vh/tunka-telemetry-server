@@ -12,19 +12,23 @@ CONFIG_PATH = Path(__file__).parent / '../camconfig.yaml'
 config = dict()
 
 
-def read_config():
+def update_config():
     global config
     with open(CONFIG_PATH, 'r') as f:
         config = yaml.safe_load(f)
 
 
-read_config()  # initial read
+def get_camera_config():
+    return config
+
+
+update_config()  # initial read
 
 
 async def update_on_the_fly():
     """Watch for changes in config file and update it"""
     async for _ in awatch(CONFIG_PATH):
-        read_config()
+        update_config()
         print('config file updated:')
         pprint(config, indent=4)
 

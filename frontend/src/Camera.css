@@ -1,0 +1,30 @@
+.camera-feed {
+  max-width: 85%;
+  max-height: 85%;
+  object-fit: contain;
+}
+
+.camera-feed-placeholder {
+  width: 85%;
+  height: 85%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid black;
+}
+
+.metadata-block {
+  margin: 3%;
+  /* background-color: red; */
+  width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  text-align: left;
+  padding: 5px;
+  border: 1px solid black;
+}

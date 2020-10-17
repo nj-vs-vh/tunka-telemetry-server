@@ -148,6 +148,28 @@ set_gain(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+static PyObject*
+set_ccd_mode(PyObject* self, PyObject* args)
+{
+    int ccd_mode;
+    if (!PyArg_ParseTuple(args, "i", &ccd_mode))
+        return NULL;
+    char* item_name;
+    switch (ccd_mode)
+    {
+    case 0:  // ccd_mode = 0  =>  RAW 8 1x1
+        item_name = "RAW 8 1x1";
+        break;
+    case 1:  // ccd_mode = 0  =>  RGB 24 1x1
+        item_name = "RGB 24 1x1";
+        break;
+    }
+    const char * items[] = { item_name };
+    bool values[] = { true };
+    indigo_change_switch_property(&ccd_client, ccd_device_name, CCD_MODE_PROPERTY_NAME, 1, items, values);
+    Py_RETURN_NONE;
+}
+
 
 // Python module stuff
 
@@ -162,6 +184,7 @@ static PyMethodDef methods[] = {
     {"set_shot_processing_callback", (PyCFunction)set_shot_processing_callback, METH_VARARGS, "store new callback"},
     {"take_shot_with_exposure", (PyCFunction)take_shot_with_ccd, METH_VARARGS, "request new image from driver"},
     {"set_gain", (PyCFunction)set_gain, METH_VARARGS, "set CCD device gain"},
+    {"set_ccd_mode", (PyCFunction)set_ccd_mode, METH_VARARGS, "set CCD device-specific mode"},
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
