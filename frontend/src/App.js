@@ -12,8 +12,10 @@ function App() {
         <div className="sit-ser-name">SIT onboard camera</div>
       </div>
       <div className="data-container">
-        <CameraMetadataFeed></CameraMetadataFeed>
         <CameraFeed></CameraFeed>
+      </div>
+      <div className="data-container">
+        <CameraMetadataFeed></CameraMetadataFeed>
       </div>
     </div>
   );
