@@ -215,3 +215,5 @@ experiments
 *.jpeg
 *.jpg
 *.png
+
+camconfig.yaml
