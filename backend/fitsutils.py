@@ -13,9 +13,11 @@ def save_fits_as_jpeg(hdul: HDUList, filename: str):
     # data = (data - vmin)/(vmax - vmin)
     # data = (255*data).astype(np.uint8)
     # data = data[::-1, :]
-    data = np.transpose(data, (1, 2, 0))
-
-    image = Image.fromarray(data, 'RGB')
+    if data.ndim == 3:
+        data = np.transpose(data, (1, 2, 0))
+        image = Image.fromarray(data, 'RGB')
+    elif data.ndim == 2:
+        image = Image.fromarray(data, 'L')
     image.save(filename, format='jpeg')
 
 
