@@ -17,7 +17,7 @@
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: flex-start;
-  align-items: baseline;
+  align-items: stretch;
   border-bottom: solid 2px hsl(211, 61%, 10%);
 }
 
