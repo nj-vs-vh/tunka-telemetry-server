@@ -1,9 +1,14 @@
+import os
 import asyncio
 
 from quart import Quart, Response
+from hypercorn.asyncio import serve
+from hypercorn.config import Config
+
+from pathlib import Path
+from dotenv import load_dotenv
 
 from camera_adapter import CameraAdapter
-
 import camera_config
 
 
@@ -42,9 +47,19 @@ async def force_camera_reconnect():
 # running camera and server concurrently in asyncio event loop
 
 loop = asyncio.get_event_loop()
-
 loop.create_task(camera.operate())
 loop.create_task(camera_config.update_on_the_fly())
-app.run(debug=False, use_reloader=False, loop=loop)
 
-loop.run_forever()
+env_path = (Path(__file__).parent / '.quartenv').resolve()
+load_dotenv(env_path)
+serve_with = os.environ.get('SERVE_WITH', None)
+
+if serve_with == 'Hypercorn':
+    loop.run_until_complete(serve(app, Config()))
+elif serve_with == 'Quart_run':
+    app.run(debug=False, use_reloader=False, loop=loop, port=8000)
+    loop.run_forever()
+else:
+    raise OSError(
+        "SERVE_WITH environment variable must be set to 'Hypercorn' or 'Quart_run' (preferably in .quartenv file)"
+    )
