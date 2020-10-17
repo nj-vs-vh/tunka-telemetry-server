@@ -20,6 +20,8 @@ preview:
     period: 5
     exposure: 0.03
     gain: 20
+    # rgb | greyscale
+    color_mode: rgb
 
 # Для тестирования, на сервере должно стоять enabled: False
 testing:

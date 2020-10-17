@@ -72,7 +72,12 @@ class CameraAdapter:
                 config_entry = get_camera_config()[config_id]
                 if config_entry['enabled'] is True:
                     start = time.time()
-                    camera.take_shot(config_entry['exposure'], config_entry['gain'], callback=camera_freeing(callback))
+                    camera.take_shot(
+                        config_entry['exposure'],
+                        config_entry['gain'],
+                        color_mode=config_entry.get('color_mode', 'rgb').upper(),
+                        callback=camera_freeing(callback)
+                    )
                     duration = time.time() - start
                 else:
                     duration = 0

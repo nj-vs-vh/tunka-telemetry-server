@@ -82,6 +82,11 @@ def take_shot(exposure: Number, gain: Number, color_mode: ColorMode = None, call
         return
     if color_mode is None:
         color_mode = ColorMode.RGB
+    elif isinstance(color_mode, str):
+        try:
+            color_mode = ColorMode[color_mode]
+        except Exception:
+            color_mode = ColorMode.RGB
     _pyindigo.set_ccd_mode(color_mode.value)
     _pyindigo.set_gain(float(gain))
     time.sleep(0.1)  # safety delay to let gain be accepted by device
