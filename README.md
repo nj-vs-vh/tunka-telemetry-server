@@ -1,5 +1,22 @@
 # Телеметрия в эксперименте Тунка
 
+## Работа с сервером
+
+1. Конфигурация nginx: `/etc/nginx/sites-enabled/camserver.nginx`
+
+2. Файл сервиса бэкенда: `/etc/systemd/system/camserver-backend.service`
+
+Манипуляции с сервисом бэкенда:
+
+```bash
+sudo systemctl status camserver-backend
+sudo systemctl start camserver-backend
+sudo systemctl stop camserver-backend
+```
+
+3. Конфиг камеры: `camconfig.yaml`, инструкции внутри
+
+
 ## Установка и настройка
 
 1. Склонировать этот репозиторий
