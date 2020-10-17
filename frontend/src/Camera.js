@@ -47,17 +47,17 @@ export function CameraMetadataFeed() {
     }
     else {
         return <div className="metadata-block">
-            <table>
-                <tr><th>Exposure</th><th>{currentMetadata.exposure}</th></tr>
-                <tr><th>Gain</th><th>{currentMetadata.gain}</th></tr>
-                <tr><th>Device temperature</th><th>{currentMetadata.device_temperature}</th></tr>
+            <table> <tbody>
+                <tr><td>Exposure</td><td>{currentMetadata.exposure}</td></tr>
+                <tr><td>Gain</td><td>{currentMetadata.gain}</td></tr>
+                <tr><td>Device temperature</td><td>{currentMetadata.device_temperature}</td></tr>
                 <tr>
-                    <th>Device datetime</th>
-                    <th>{
-                        new Date( Date.parse(currentMetadata.device_time) ).toLocaleString()
-                    }</th>
+                    <td>Device datetime</td>
+                    <td>
+                        { new Date( Date.parse(currentMetadata.device_time) ).toLocaleString() }
+                    </td>
                 </tr>
-            </table>
+            </tbody> </table>
         </div>
     }
 }

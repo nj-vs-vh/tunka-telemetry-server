@@ -1,25 +1,30 @@
 .App {
   height: 100vh;
-  margin-left: 15%;
-  margin-right: 15%;
-  display: flex;
-  flex-flow: column;
+  margin-left: 10%;
+  margin-right: 10%;
+  /* display: flex; */
+  /* flex-flow: column; */
 }
 
-.App-header {
+.header {
   position: -webkit-sticky; /* Safari */
-  position: sticky;
   top: 0;
   padding-top: 15px;
   padding-bottom: 15px;
-  height: 50px;
+  height: 40px;
   width: 100%;
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: baseline;
   border-bottom: solid 2px hsl(211, 61%, 10%);
+}
+
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%
 }
 
 
@@ -27,7 +32,7 @@
   flex-grow: 4;
   align-self: flex-end;
   height: 100%;
-  font-size: 45.6px;
+  font-size: 30px;
   margin-left: 3%;
 }
 
@@ -41,36 +46,10 @@
 .data-container {
   /* background-color: red; */
   display: flex;
-  height: calc(100% - 50px);
+  height: calc(100vh - 40px);
+  /* height: 100%; */
   width: 100%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-
-.camera-feed {
-  max-width: 85%;
-  max-height: 85%;
-  object-fit: contain;
-}
-
-.camera-feed-placeholder {
-  width: 70%;
-  height: 70%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid black;
-}
-
-.metadata-string {
-  margin-top: 10px;
-  margin-left: 5px;
-  /* text-align: left; */
-  width: 100%;
-}
-
-.App-link {
-  color: #6b61fb;
 }

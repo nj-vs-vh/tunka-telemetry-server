@@ -7,16 +7,18 @@ import { CameraFeed, CameraMetadataFeed } from './Camera'
 function App() {
   return (
     <div className="App">
-      <div className="App-header">
+      <div className="header">
         <img src={TaigaLogo} alt='taiga logo' className="taiga-logo"></img>
-        <div className="sit-ser-name">SIT onboard camera</div>
+        <div className="sit-ser-name">SIT camera (тестовый режим)</div>
       </div>
-      <div className="data-container">
-        <CameraFeed></CameraFeed>
-      </div>
-      <div className="data-container">
-        <CameraMetadataFeed></CameraMetadataFeed>
-      </div>
+      <content>
+        <div className="data-container">
+          <CameraFeed></CameraFeed>
+        </div>
+        <div className="data-container">
+          <CameraMetadataFeed></CameraMetadataFeed>
+        </div>
+      </content>
     </div>
   );
 }
