@@ -2,11 +2,15 @@
 
 ## Работа с сервером
 
-1. Конфигурация nginx: `/etc/nginx/sites-enabled/camserver.nginx`
+* Директория камеры: `/home/vmn/camera-server/`
 
-2. Файл сервиса бэкенда: `/etc/systemd/system/camserver-backend.service`
+* Конфигурация камеры: `/home/vmn/camera-server/camconfig.yaml`, инструкции внутри
 
-Манипуляции с сервисом бэкенда:
+* Конфигурация nginx (скорее всего трогать не придётся): `/etc/nginx/sites-enabled/camserver.nginx`
+
+* Файл сервиса бэкенда (скорее всего трогать не придётся): `/etc/systemd/system/camserver-backend.service`
+
+* Манипуляции с сервисом бэкенда:
 
 ```bash
 sudo systemctl status camserver-backend
@@ -14,7 +18,7 @@ sudo systemctl start camserver-backend
 sudo systemctl stop camserver-backend
 ```
 
-3. Конфиг камеры: `camconfig.yaml`, инструкции внутри
+Сервис должен перезапускаться сам при рестарте машины, но это почему-то не всегда происходит, поэтому иногда может понадобится вручную делать `stop` - `start`
 
 
 ## Установка и настройка
