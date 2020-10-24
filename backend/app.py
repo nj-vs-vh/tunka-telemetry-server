@@ -54,12 +54,15 @@ env_path = (Path(__file__).parent / '.quartenv').resolve()
 load_dotenv(env_path)
 serve_with = os.environ.get('SERVE_WITH', None)
 
-if serve_with == 'Hypercorn':
-    loop.run_until_complete(serve(app, Config()))
-elif serve_with == 'Quart_run':
-    app.run(debug=False, use_reloader=False, loop=loop, port=8000)
-    loop.run_forever()
-else:
-    raise OSError(
-        "SERVE_WITH environment variable must be set to 'Hypercorn' or 'Quart_run' (preferably in .quartenv file)"
-    )
+try:
+    if serve_with == 'Hypercorn':
+        loop.run_until_complete(serve(app, Config()))
+    elif serve_with == 'Quart_run':
+        app.run(debug=False, use_reloader=False, loop=loop, port=8000)
+        loop.run_forever()
+    else:
+        raise OSError(
+            "SERVE_WITH environment variable must be set to 'Hypercorn' or 'Quart_run' (preferably in .quartenv file)"
+        )
+finally:
+    loop.close()
