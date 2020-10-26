@@ -30,7 +30,7 @@ async def camera_feed():
 @app.route('/api/latest-camera-metadata')
 async def latest_camera_metadata():
     if camera.preview_metadata is None:
-        return Response({"message": "Try reconnecting camera"}, 500)
+        return {"message": "Try reconnecting camera"}, 500
     else:
         return camera.preview_metadata
 
@@ -39,9 +39,9 @@ async def latest_camera_metadata():
 async def force_camera_reconnect():
     camera.reconnect()
     if camera.terminal_failure:
-        return Response({"message": "Camera has failed and cannot be reconnected, server reboot required :("}, 500)
+        return {"message": "Camera has failed and cannot be reconnected, server reboot required :("}, 500
     else:
-        return Response({"message": "Reconnected ok"}, 200)
+        return {"message": "Reconnected ok"}, 200
 
 
 # running camera and server concurrently in asyncio event loop
