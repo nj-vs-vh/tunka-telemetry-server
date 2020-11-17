@@ -217,3 +217,5 @@ experiments
 *.png
 
 camconfig.yaml
+backend/.indigoenv
+backend/.quartenv

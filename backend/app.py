@@ -28,10 +28,6 @@ if log_level:
 logging.basicConfig(**logging_config)
 
 
-logging.info('info test')
-logging.debug('debug test')
-
-
 camera = CameraAdapter()
 
 app = Quart(__name__)

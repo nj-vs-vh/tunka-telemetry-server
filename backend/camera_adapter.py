@@ -1,3 +1,4 @@
+from pathlib import Path
 import asyncio
 import time
 from collections import defaultdict
@@ -17,6 +18,9 @@ from camera_config import get_camera_config
 
 
 DEBUG_LOCK = False
+
+FITS_DIR = Path(__file__).parent.parent / 'images'
+FITS_DIR.mkdir(exist_ok=True)
 
 
 class CameraAdapter:
@@ -115,6 +119,7 @@ class CameraAdapter:
     @accepts_hdu_list
     def _preview_generation_callback(self, hdul: HDUList):
         logging.debug('preview callback run')
+        hdul.writeto(FITS_DIR / self._generate_image_name('preview', 'fits'))
         inmem_file = BytesIO()
         fitsutils.save_fits_as_jpeg(hdul, inmem_file)
         inmem_file.seek(0)

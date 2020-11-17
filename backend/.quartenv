@@ -1,9 +1,0 @@
-QUART_APP=app.py
-QUART_ENV=development
-QUART_DEBUG=0
-
-SERVE_WITH="Hypercorn"
-# SERVE_WITH="Quart_run"
-
-LOG_FILENAME = "camera_log.txt"
-LOG_LEVEL = "INFO"  # CRITICAL, ERROR, WARNING, INFO, DEBUG
