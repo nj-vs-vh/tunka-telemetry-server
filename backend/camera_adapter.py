@@ -14,6 +14,10 @@ import fitsutils
 from camera_config import get_camera_config
 
 
+def timed_log(s):
+    print(datetime.now().strftime(r'%X %f') + ': ' + s)
+
+
 class CameraAdapter:
     """Adapter for pyindigo camera, handling high-level asyncronous operation, configuration, etc
 
@@ -29,6 +33,27 @@ class CameraAdapter:
         self.preview: bytes = None
         self.preview_metadata: dict = None
         self.new_preview_ready = asyncio.Event()
+
+        # taking one preview shot in adavance to avoid cold start
+        config_entry = get_camera_config()['preview']
+        shot_ready = False
+
+        def flag_setting(callback):
+            def decorated(*args):
+                callback(*args)
+                nonlocal shot_ready
+                shot_ready = True
+            return decorated
+
+        camera.take_shot(
+            config_entry['exposure'],
+            config_entry['gain'],
+            color_mode=config_entry.get('color_mode', 'rgb').upper(),
+            callback=flag_setting(self._preview_generation_callback)
+        )
+
+        while not shot_ready:  # blocking await
+            time.sleep(0.1)
 
     def connected(self):
         return camera.connected()
@@ -59,6 +84,7 @@ class CameraAdapter:
         period, gain, exposure and callback. Conflicts are resolved with lock"""
 
         async def unlock_camera():
+            timed_log(f'{config_id} releasing lock')
             self.camera_lock.release()
 
         def camera_freeing(callback, loop):
@@ -77,7 +103,9 @@ class CameraAdapter:
                 if config_entry['enabled'] is True:
                     start = time.time()
                     loop = asyncio.get_running_loop()
+                    timed_log(f'{config_id} awaiting lock')
                     await self.camera_lock.acquire()
+                    timed_log(f'{config_id} got lock')
                     camera.take_shot(
                         config_entry['exposure'],
                         config_entry['gain'],
@@ -94,6 +122,7 @@ class CameraAdapter:
     @prints_errors
     @accepts_hdu_list
     def _preview_generation_callback(self, hdul: HDUList):
+        timed_log('preview callback fired')
         inmem_file = BytesIO()
         fitsutils.save_fits_as_jpeg(hdul, inmem_file)
         inmem_file.seek(0)
@@ -109,7 +138,7 @@ class CameraAdapter:
             yield self.preview, self.preview_metadata
 
     def _testing_callback(self, *args):
-        print('hello from testing!')
+        timed_log('testing callback fired')
 
     @staticmethod
     def _generate_image_name(prefix: str, format_: str) -> str:
