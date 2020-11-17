@@ -1,21 +1,22 @@
 import asyncio
 import time
+from collections import defaultdict
+
+import logging
 
 from datetime import datetime
 from astropy.io.fits import HDUList
 from io import BytesIO
 from importlib import reload
 
-from pyindigo import camera
-from pyindigo.callback_utils import prints_errors, accepts_hdu_list
+from pyindigo.callback_utils import handles_errors, accepts_hdu_list
 
 import fitsutils
 
 from camera_config import get_camera_config
 
 
-def timed_log(s):
-    print(datetime.now().strftime(r'%X %f') + ': ' + s)
+DEBUG_LOCK = False
 
 
 class CameraAdapter:
@@ -27,48 +28,33 @@ class CameraAdapter:
     """
 
     def __init__(self):
+        from pyindigo import camera  # actual pyindigo initialization
+        self.camera = camera
+
         self.terminal_failure = False
         self.camera_lock = asyncio.Lock()
+        self.operation_pending = defaultdict(lambda: False)
 
         self.preview: bytes = None
         self.preview_metadata: dict = None
         self.new_preview_ready = asyncio.Event()
 
-        # taking one preview shot in adavance to avoid cold start
-        config_entry = get_camera_config()['preview']
-        shot_ready = False
-
-        def flag_setting(callback):
-            def decorated(*args):
-                callback(*args)
-                nonlocal shot_ready
-                shot_ready = True
-            return decorated
-
-        camera.take_shot(
-            config_entry['exposure'],
-            config_entry['gain'],
-            color_mode=config_entry.get('color_mode', 'rgb').upper(),
-            callback=flag_setting(self._preview_generation_callback)
-        )
-
-        while not shot_ready:  # blocking await
-            time.sleep(0.1)
-
     def connected(self):
-        return camera.connected()
+        return self.camera.connected()
 
     def reconnect(self):
         """Experimental method for when we want to reconnect to camera by restarting whole INDIGO interface"""
-        if camera.connected() or self.terminal_failure:
+        if self.camera.connected() or self.terminal_failure:
             return
         else:
-            print('Reloading INDIGO interface...')
-            camera.unload_pyindigo()
+            logging.info('Reloading INDIGO interface on some error...')
+            self.camera.unload_pyindigo()
             time.sleep(1)
-            reload(camera)
-            if not camera.connected():
+            reload(self.camera)
+            if not self.camera.connected():
+                logging.info("Reloading unsuccessful, camera is in terminal failure state")
                 self.terminal_failure = True
+            logging.info("Reloading successful, camera operating")
 
     async def operate(self):
         """All operations by camera, ready to be run concurrently.
@@ -76,16 +62,19 @@ class CameraAdapter:
         This is the only coroutine that should be launched from outside!"""
         return await asyncio.gather(
             self._regularly_take_shots('preview', self._preview_generation_callback),
-            self._regularly_take_shots('testing', self._testing_callback)
+            # testing is usually turned off on server
+            self._regularly_take_shots('testing', lambda *args: logging.debug('testing callback run'))
         )
 
     def _regularly_take_shots(self, config_id, callback):
         """Coroutine factory, return coroutine that regularly takes shots with given
-        period, gain, exposure and callback. Conflicts are resolved with lock"""
+        config_id (see camconfig.yaml) and callback. Conflicts are resolved with lock"""
 
         async def unlock_camera():
-            timed_log(f'{config_id} releasing lock')
+            if DEBUG_LOCK:
+                logging.debug(f'{config_id} releasing lock')
             self.camera_lock.release()
+            self.operation_pending[config_id] = False
 
         def camera_freeing(callback, loop):
             def decorated_callback(*args):
@@ -93,20 +82,23 @@ class CameraAdapter:
                 try:
                     asyncio.run_coroutine_threadsafe(unlock_camera(), loop)
                 except Exception as e:
-                    print(e)
+                    logging.error(f'Error unlocking camera: {e}')
             return decorated_callback
 
         async def coro():
             """The actual coroutine that can be put into an event loop"""
             while True:
                 config_entry = get_camera_config()[config_id]
-                if config_entry['enabled'] is True:
+                if config_entry['enabled'] is True and not self.operation_pending[config_id]:
                     start = time.time()
                     loop = asyncio.get_running_loop()
-                    timed_log(f'{config_id} awaiting lock')
+                    if DEBUG_LOCK:
+                        logging.debug(f'{config_id} awaiting lock')
+                    self.operation_pending[config_id] = True
                     await self.camera_lock.acquire()
-                    timed_log(f'{config_id} got lock')
-                    camera.take_shot(
+                    if DEBUG_LOCK:
+                        logging.debug(f'{config_id} got lock')
+                    self.camera.take_shot(
                         config_entry['exposure'],
                         config_entry['gain'],
                         color_mode=config_entry.get('color_mode', 'rgb').upper(),
@@ -119,10 +111,10 @@ class CameraAdapter:
 
         return coro()
 
-    @prints_errors
+    @handles_errors(lambda e: logging.error(f"Error in preview generation callback: {e}"))
     @accepts_hdu_list
     def _preview_generation_callback(self, hdul: HDUList):
-        timed_log('preview callback fired')
+        logging.debug('preview callback run')
         inmem_file = BytesIO()
         fitsutils.save_fits_as_jpeg(hdul, inmem_file)
         inmem_file.seek(0)
@@ -136,9 +128,6 @@ class CameraAdapter:
             await self.new_preview_ready.wait()
             self.new_preview_ready.clear()
             yield self.preview, self.preview_metadata
-
-    def _testing_callback(self, *args):
-        timed_log('testing callback fired')
 
     @staticmethod
     def _generate_image_name(prefix: str, format_: str) -> str:

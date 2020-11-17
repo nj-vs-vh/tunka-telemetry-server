@@ -1,10 +1,7 @@
-from watchgod import awatch
-
-import yaml
-
 from pathlib import Path
-
-from pprint import pprint
+from watchgod import awatch
+import logging
+import yaml
 
 
 CONFIG_PATH = Path(__file__).parent / '../camconfig.yaml'
@@ -29,8 +26,7 @@ async def update_on_the_fly():
     """Watch for changes in config file and update it"""
     async for _ in awatch(CONFIG_PATH):
         update_config()
-        print('config file updated:')
-        pprint(config, indent=4)
+        logging.info(f'config file updated:\n' + '\n'.join('\t\t' + line for line in yaml.dump(config).split('\n')))
 
 
 if __name__ == "__main__":

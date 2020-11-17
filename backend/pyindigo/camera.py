@@ -18,6 +18,8 @@ import os
 import time
 import atexit
 
+import logging
+
 from dotenv import load_dotenv
 from pathlib import Path
 from enum import Enum
@@ -52,13 +54,18 @@ class ColorMode(Enum):
     RGB = 1
 
 
+logging.info(f"Pyindigo is connecting to camera ({DRIVER} driver, device '{DEVICE}')")
+
 _pyindigo.set_device_name(DEVICE)
 _pyindigo.setup_ccd_client(DRIVER)
 time.sleep(5)  # workaround to give camera time to connect before usage
 
+logging.info("Pyindigo connected to camera")
+
 
 def unload_pyindigo():
     """Direct wrapper of internal INDIGO unloading, but can be called from outside (see CameraAdapter reload method)"""
+    logging.info("Unloading pyindigo")
     _pyindigo.cleanup_ccd_client()
 
 
@@ -78,7 +85,7 @@ def take_shot(exposure: Number, gain: Number, color_mode: ColorMode = None, call
         _exposing = False  # prevent mess if device is disconnected while exposing
         return
     if _exposing:
-        print(f'{DEVICE} is exposing at the time!')
+        logging.error(f'Attempt to take shot with {DEVICE} which is exposing at the time!')
         return
     if color_mode is None:
         color_mode = ColorMode.RGB
@@ -87,6 +94,10 @@ def take_shot(exposure: Number, gain: Number, color_mode: ColorMode = None, call
             color_mode = ColorMode[color_mode]
         except Exception:
             color_mode = ColorMode.RGB
+    logging.debug(
+        f"Pyindigo takes shot with gain {gain}, exposure {exposure} and {color_mode.name} color mode. "
+        + f"A result will be passed to {callback.__name__}"
+    )
     _pyindigo.set_ccd_mode(color_mode.value)
     _pyindigo.set_gain(float(gain))
     time.sleep(0.1)  # safety delay to let gain be accepted by device

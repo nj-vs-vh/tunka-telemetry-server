@@ -1,6 +1,8 @@
 import os
 import asyncio
 
+import logging
+
 from quart import Quart, Response
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
@@ -10,6 +12,24 @@ from dotenv import load_dotenv
 
 from camera_adapter import CameraAdapter
 import camera_config
+
+
+env_path = (Path(__file__).parent / '.quartenv').resolve()
+load_dotenv(env_path)
+
+# see https://docs.python.org/3/library/logging.html#logging.basicConfig
+logging_config = {'format': r'[%(asctime)s] %(levelname)s: %(message)s', 'datefmt': r'%x %X'}
+log_filename = os.environ.get("LOG_FILENAME", None)
+if log_filename:
+    logging_config['filename'] = str((Path(__file__).parent.parent / log_filename).resolve())
+log_level = os.environ.get("LOG_LEVEL", None)
+if log_level:
+    logging_config['level'] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
+logging.basicConfig(**logging_config)
+
+
+logging.info('info test')
+logging.debug('debug test')
 
 
 camera = CameraAdapter()
@@ -50,8 +70,6 @@ loop = asyncio.get_event_loop()
 loop.create_task(camera.operate())
 loop.create_task(camera_config.update_on_the_fly())
 
-env_path = (Path(__file__).parent / '.quartenv').resolve()
-load_dotenv(env_path)
 serve_with = os.environ.get('SERVE_WITH', None)
 
 try:

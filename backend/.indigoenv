@@ -1,2 +1,2 @@
-CAMERA_MODE="Real"
-# CAMERA_MODE="Simulator"
+# CAMERA_MODE="Real"
+CAMERA_MODE="Simulator"
