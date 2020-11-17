@@ -24,6 +24,7 @@ class CameraAdapter:
 
     def __init__(self):
         self.terminal_failure = False
+        self.camera_lock = asyncio.Lock()
 
         self.preview: bytes = None
         self.preview_metadata: dict = None
@@ -45,7 +46,7 @@ class CameraAdapter:
                 self.terminal_failure = True
 
     async def operate(self):
-        """All operations by camera ready to be run concurrently.
+        """All operations by camera, ready to be run concurrently.
 
         This is the only coroutine that should be launched from outside!"""
         return await asyncio.gather(
@@ -57,13 +58,16 @@ class CameraAdapter:
         """Coroutine factory, return coroutine that regularly takes shots with given
         period, gain, exposure and callback. Conflicts are resolved with lock"""
 
-        def camera_freeing(callback):
+        async def unlock_camera():
+            self.camera_lock.release()
+
+        def camera_freeing(callback, loop):
             def decorated_callback(*args):
-                """For later use"""
+                callback(*args)
                 try:
-                    callback(*args)
-                finally:
-                    pass
+                    asyncio.run_coroutine_threadsafe(unlock_camera(), loop)
+                except Exception as e:
+                    print(e)
             return decorated_callback
 
         async def coro():
@@ -72,11 +76,13 @@ class CameraAdapter:
                 config_entry = get_camera_config()[config_id]
                 if config_entry['enabled'] is True:
                     start = time.time()
+                    loop = asyncio.get_running_loop()
+                    await self.camera_lock.acquire()
                     camera.take_shot(
                         config_entry['exposure'],
                         config_entry['gain'],
                         color_mode=config_entry.get('color_mode', 'rgb').upper(),
-                        callback=camera_freeing(callback)
+                        callback=camera_freeing(callback, loop)
                     )
                     duration = time.time() - start
                 else:
