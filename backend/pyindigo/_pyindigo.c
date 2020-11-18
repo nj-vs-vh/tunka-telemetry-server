@@ -173,21 +173,6 @@ set_ccd_mode(PyObject* self, PyObject* args)
 }
 
 
-// should be about 80-90 for USB2 and about 45-60 on USB3
-// see https://github.com/indigo-astronomy/indigo/issues/325
-static PyObject*
-set_usb_bandwidth(PyObject* self, PyObject* args)
-{
-    double bandwidth;
-    if (!PyArg_ParseTuple(args, "d", &bandwidth))
-        return NULL;
-    const char * items[] = { "USB_BANDWIDTH" };
-    double values[] = { bandwidth };
-    indigo_change_number_property(&ccd_client, ccd_device_name, "ADVANCED", 1, items, values);
-    Py_RETURN_NONE;
-}
-
-
 // Python module stuff
 
 
@@ -202,7 +187,6 @@ static PyMethodDef methods[] = {
     {"take_shot_with_exposure", (PyCFunction)take_shot_with_ccd, METH_VARARGS, "request new image from driver"},
     {"set_gain", (PyCFunction)set_gain, METH_VARARGS, "set CCD device gain"},
     {"set_ccd_mode", (PyCFunction)set_ccd_mode, METH_VARARGS, "set CCD device-specific mode"},
-    {"set_usb_bandwidth", (PyCFunction)set_usb_bandwidth, METH_VARARGS, "set USB bandwidth"},
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
