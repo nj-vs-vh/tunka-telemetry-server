@@ -131,7 +131,9 @@ class CameraAdapter:
     @handles_errors(lambda e: logging.error(f"Error in FITS saving callback: {e}"))
     @accepts_hdu_list
     def _fits_saving_callback(self, hdul: HDUList):
-        hdul.writeto(FITS_DIR / self._generate_image_name('image', 'fits'))
+        file_path = str(FITS_DIR / self._generate_image_name('image', 'fits'))
+        # logging.info(f'saving FITS image to {file_path}')
+        hdul.writeto(file_path)
 
     async def preview_feed_generator(self):
         """Async generator yielding new preview shots as they arise, for outside use"""
