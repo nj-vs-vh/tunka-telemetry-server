@@ -66,7 +66,8 @@ class CameraAdapter:
         This is the only coroutine that should be launched from outside!"""
         return await asyncio.gather(
             self._regularly_take_shots('preview', self._preview_generation_callback),
-            # testing is usually turned off on server
+            self._regularly_take_shots('savetodisk', self._fits_saving_callback),
+            # testing is usually turned off on server (enabled: False in config)
             self._regularly_take_shots('testing', lambda *args: logging.debug('testing callback run'))
         )
 
@@ -92,8 +93,8 @@ class CameraAdapter:
         async def coro():
             """The actual coroutine that can be put into an event loop"""
             while True:
-                config_entry = get_camera_config()[config_id]
-                if config_entry['enabled'] is True and not self.operation_pending[config_id]:
+                config_entry = get_camera_config().get([config_id], None)
+                if config_entry and config_entry['enabled'] is True and not self.operation_pending[config_id]:
                     start = time.time()
                     loop = asyncio.get_running_loop()
                     if DEBUG_LOCK:
@@ -125,7 +126,13 @@ class CameraAdapter:
         inmem_file.seek(0)
         self.preview = inmem_file.getvalue()
         self.preview_metadata = fitsutils.extract_metadata(hdul)
+        self.preview_metadata.update({'Current datetime': datetime.now().strftime(r"%Y_%m_%d_%H_%M_%S")})
         self.new_preview_ready.set()
+
+    @handles_errors(lambda e: logging.error(f"Error in FITS saving callback: {e}"))
+    @accepts_hdu_list
+    def _fits_saving_callback(self, hdul: HDUList):
+        hdul.writeto(FITS_DIR / self._generate_image_name('preview', 'fits'))
 
     async def preview_feed_generator(self):
         """Async generator yielding new preview shots as they arise, for outside use"""
