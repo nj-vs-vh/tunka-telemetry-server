@@ -93,7 +93,7 @@ class CameraAdapter:
         async def coro():
             """The actual coroutine that can be put into an event loop"""
             while True:
-                config_entry = get_camera_config().get([config_id], None)
+                config_entry = get_camera_config().get(config_id, None)
                 if config_entry and config_entry['enabled'] is True and not self.operation_pending[config_id]:
                     start = time.time()
                     loop = asyncio.get_running_loop()
