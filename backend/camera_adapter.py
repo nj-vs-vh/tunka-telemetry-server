@@ -120,7 +120,6 @@ class CameraAdapter:
     @accepts_hdu_list
     def _preview_generation_callback(self, hdul: HDUList):
         logging.debug('preview callback run')
-        hdul.writeto(FITS_DIR / self._generate_image_name('preview', 'fits'))
         inmem_file = BytesIO()
         fitsutils.save_fits_as_jpeg(hdul, inmem_file)
         inmem_file.seek(0)
@@ -132,7 +131,7 @@ class CameraAdapter:
     @handles_errors(lambda e: logging.error(f"Error in FITS saving callback: {e}"))
     @accepts_hdu_list
     def _fits_saving_callback(self, hdul: HDUList):
-        hdul.writeto(FITS_DIR / self._generate_image_name('preview', 'fits'))
+        hdul.writeto(FITS_DIR / self._generate_image_name('image', 'fits'))
 
     async def preview_feed_generator(self):
         """Async generator yielding new preview shots as they arise, for outside use"""
