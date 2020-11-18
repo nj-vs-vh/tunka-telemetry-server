@@ -63,7 +63,7 @@ time.sleep(5)  # workaround to give camera time to connect before usage
 logging.info("Pyindigo connected to camera")
 
 if DRIVER != 'indigo_ccd_simulator':
-    _pyindigo.set_usb_bandwidth(50)
+    _pyindigo.set_usb_bandwidth(50.0)
 
 
 def unload_pyindigo():

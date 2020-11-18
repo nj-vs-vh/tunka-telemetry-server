@@ -164,6 +164,7 @@ set_ccd_mode(PyObject* self, PyObject* args)
     case 1:  // ccd_mode = 0  =>  RGB 24 1x1
         item_name = "RGB 24 1x1";
         break;
+    default: {item_name = "RGB 24 1x1";}
     }
     const char * items[] = { item_name };
     bool values[] = { true };
@@ -177,12 +178,12 @@ set_ccd_mode(PyObject* self, PyObject* args)
 static PyObject*
 set_usb_bandwidth(PyObject* self, PyObject* args)
 {
-    int bandwidth;
-    if (!PyArg_ParseTuple(args, "i", &bandwidth))
+    double bandwidth;
+    if (!PyArg_ParseTuple(args, "d", &bandwidth))
         return NULL;
     const char * items[] = { "USB_BANDWIDTH" };
-    int values[] = { bandwidth };
-    indigo_change_switch_property(&ccd_client, ccd_device_name, "ADVANCED", 1, items, values);
+    double values[] = { bandwidth };
+    indigo_change_number_property(&ccd_client, ccd_device_name, "ADVANCED", 1, items, values);
     Py_RETURN_NONE;
 }
 
