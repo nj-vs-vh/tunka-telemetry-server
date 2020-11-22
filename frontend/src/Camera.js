@@ -1,63 +1,60 @@
 import React, { Component, useState, useEffect } from 'react';
+import getFetchEffect from './fetchState'
 
 import './Camera.css';
+import './App.css'
 
 
 // var cameraConnected = false
 
 
-export class CameraFeed extends Component {
-    constructor() {
-        super();
-        this.state = { cameraOk: true }
-    }
-    render () {
-        if (this.state.cameraOk) { return <img src="/api/camera-feed" alt="" className="camera-feed"></img> }
-        else { return <div className="camera-feed">Something's wrong with the camera...</div> }
-    }
-}
-
-
-function fetchLatestMetadata (setNewMetadata) {
-    try {
-        fetch("/api/latest-camera-metadata")
-        .then( response => {
-            if (!response.ok) { console.log(response) }
-            return response.json()
-        })
-        .then( json => {setNewMetadata(json)})
-    } catch (err) {
-      console.error(err.message);
-    }
-};
-
-
-export function CameraMetadataFeed() {
-    const [currentMetadata, setMetadata] = useState(null)
+export function CameraFeed() {
+    const [metadata, setMetadata] = useState(null)
     
-    useEffect( () => {
-        let interval = setInterval(() => {fetchLatestMetadata(setMetadata)}, 3000)
-        return function cleanup() {
-            clearInterval(interval);
-        }
-    }, [])
+    useEffect(getFetchEffect(setMetadata, "/api/latest-camera-metadata", 3000), [])
 
-    if (currentMetadata === null) {
-        return <div>Loading...</div>
+    if (metadata === null) {
+        return <div className='data-page'><span>Loading...</span></div>
     }
     else {
-        return <div className="metadata-block">
-            <table> <tbody>
-                <tr><td>Exposure</td><td>{currentMetadata.exposure}</td></tr>
-                <tr><td>Gain</td><td>{currentMetadata.gain}</td></tr>
-                <tr><td>Device temperature</td><td>{currentMetadata.device_temperature}</td></tr>
-                <tr>
-                    <td>Device datetime</td>
-                    <td>
-                        { new Date( Date.parse(currentMetadata.device_time) ).toLocaleString() }
-                    </td>
-                </tr>
-            </tbody> </table>
+        return <div className='data-page'>
+            <div className="camera-col">
+                <img src="/api/camera-feed" alt="from ZWO ASI camera" className="camera-feed"></img>
+                <span className="metadata-line">
+                    <span>Exposure: {metadata.exposure} sec</span>
+                    <span>gain: {metadata.gain}</span>
+                    <span>period: {metadata.period} sec</span>
+                    <span>camera temperature: {metadata.device_temperature}°C</span>
+                    <span>shot at: {metadata.shot_datetime}</span>
+                </span>
+            </div>
         </div>
     }
 }
+
+
+// export function CameraMetadataFeed() {
+    
+
+//     if (currentMetadata === null) {
+//         return <div>Loading...</div>
+//     }
+//     else {
+//         return <div className="metadata-block">
+//             <table> <tbody>
+//                 <tr><td>Exposure</td><td>{currentMetadata.exposure}</td></tr>
+//                 <tr><td>Gain</td><td>{currentMetadata.gain}</td></tr>
+//                 <tr><td>Device temperature</td><td>{currentMetadata.device_temperature}</td></tr>
+//                 <tr>
+//                     <td>Device datetime</td>
+//                     <td>
+//                         { new Date( Date.parse(currentMetadata.device_time) ).toLocaleString() }
+//                     </td>
+//                 </tr>
+//             </tbody> </table>
+//         </div>
+//     }
+// }
+
+
+export default CameraFeed;

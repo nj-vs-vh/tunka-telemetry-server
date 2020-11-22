@@ -15,7 +15,7 @@ from importlib import reload
 from pyindigo.callback_utils import handles_errors, accepts_hdu_list
 import fitsutils
 from camera_config import camera_config, CameraMode
-from observation_conditions import observation_conditions
+from observation_conditions import observation_conditions, localtime_str
 
 
 DEBUG_LOCK = False
@@ -135,7 +135,7 @@ class CameraAdapter:
         self.preview_metadata = fitsutils.extract_metadata(hdul)
         self.preview_metadata.update(
             {
-                'server_datetime': datetime.now().strftime(r"%X %x"),
+                'shot_datetime': localtime_str(datetime.utcnow()),
                 'period': camera_config[CameraMode.PREVIEW]['period']
             }
         )

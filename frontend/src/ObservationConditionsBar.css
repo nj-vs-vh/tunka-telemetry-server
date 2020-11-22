@@ -1,0 +1,17 @@
+.obscondbar {
+    display: flex;
+    align-items: center;
+    padding-top: 15px;
+    width: 100%;
+    height: 20px;
+}
+
+.bartext {
+    padding-right: 30px;
+}
+
+.baricon {
+    height: 70%;
+    object-fit: contain;
+    padding-right: 10px;
+}

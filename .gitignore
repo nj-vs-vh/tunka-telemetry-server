@@ -208,6 +208,7 @@ indgenv
 
 indigo
 experiments
+images
 *bin*
 *build*
 *.txt

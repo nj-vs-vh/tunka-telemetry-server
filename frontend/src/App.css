@@ -2,15 +2,12 @@
   height: 100vh;
   margin-left: 10%;
   margin-right: 10%;
-  /* display: flex; */
-  /* flex-flow: column; */
 }
 
 .header {
-  position: -webkit-sticky; /* Safari */
   top: 0;
   padding-top: 15px;
-  padding-bottom: 15px;
+  padding-bottom: 10px;
   height: 40px;
   width: 100%;
   display: flex;
@@ -21,35 +18,46 @@
   border-bottom: solid 2px hsl(211, 61%, 10%);
 }
 
-.sticky {
-  position: fixed;
-  top: 0;
-  width: 100%
+.taiga-logo {
+  object-fit: contain;
+  height: 100%;
 }
 
+.github-logo {
+  object-fit: contain;
+  height: 100%;
+}
 
 .sit-ser-name {
   flex-grow: 4;
   align-self: flex-end;
+  padding-left: 3%;
   height: 100%;
-  font-size: 30px;
-  margin-left: 3%;
+  font-size: 45px;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden
 }
 
-.taiga-logo {
-  padding-left: 2%;
-  object-fit: contain;
-  padding-right: 3%;
-}
-
-
-.data-container {
+.data-page {
   /* background-color: red; */
   display: flex;
-  height: calc(100vh - 40px);
-  /* height: 100%; */
+  height: calc(100vh - 100px);
+  /* height: 100vh; */
   width: 100%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+a.footerlink {
+  text-decoration: dashed;
+  color: rgb(75, 75, 75);
 }
