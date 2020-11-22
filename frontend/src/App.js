@@ -9,7 +9,7 @@ function App() {
     <div className="App">
       <div className="header">
         <img src={TaigaLogo} alt='taiga logo' className="taiga-logo"></img>
-        <div className="sit-ser-name">SIT camera (тестовый режим)</div>
+        <span className="sit-ser-name">SIT camera (тестовый режим)</span>
       </div>
       <content>
         <div className="data-container">

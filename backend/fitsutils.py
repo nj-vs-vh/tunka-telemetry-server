@@ -1,4 +1,5 @@
 import numpy as np
+from nptyping import NDArray
 
 from astropy.io.fits import HDUList
 from PIL import Image
@@ -6,18 +7,23 @@ from PIL import Image
 from typing import Dict, Any
 
 
+def normalize_frame(frame: NDArray, bits: int = 8) -> NDArray:
+    frame = frame.astype(float)
+    frame_min = frame.min()
+    frame_range = frame.max() - frame_min
+    return ((2 ** bits) * (frame - frame_min) / frame_range).astype('int8')
+
+
 def save_fits_as_jpeg(hdul: HDUList, filename: str):
-    data: np.ndarray = hdul[0].data
-    # vmin = data.min()
-    # vmax = data.max()
-    # data = (data - vmin)/(vmax - vmin)
-    # data = (255*data).astype(np.uint8)
-    # data = data[::-1, :]
-    if data.ndim == 3:
-        data = np.transpose(data, (1, 2, 0))
-        image = Image.fromarray(data, 'RGB')
-    elif data.ndim == 2:
-        image = Image.fromarray(data, 'L')
+    image_data: NDArray = hdul[0].data
+    if image_data.ndim == 3:
+        image_data = np.transpose(image_data, (1, 2, 0))
+        for i in range(3):
+            image_data[:, :, i] = normalize_frame(image_data[:, :, i])
+        image = Image.fromarray(image_data, 'RGB')
+    elif image_data.ndim == 2:
+        image_data = normalize_frame(image_data)
+        image = Image.fromarray(image_data, 'L')
     image.save(filename, format='jpeg')
 
 

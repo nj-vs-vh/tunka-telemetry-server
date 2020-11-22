@@ -3,6 +3,8 @@ import asyncio
 import time
 from collections import defaultdict
 
+from typing import Callable, Any, Dict
+
 import logging
 
 from datetime import datetime
@@ -11,10 +13,9 @@ from io import BytesIO
 from importlib import reload
 
 from pyindigo.callback_utils import handles_errors, accepts_hdu_list
-
 import fitsutils
-
-from camera_config import get_camera_config
+from camera_config import camera_config, CameraMode
+from observation_conditions import observation_conditions
 
 
 DEBUG_LOCK = False
@@ -47,7 +48,7 @@ class CameraAdapter:
         return self.camera.connected()
 
     def reconnect(self):
-        """Experimental method for when we want to reconnect to camera by restarting whole INDIGO interface"""
+        """Experimental method for reconnecting to the camera by restarting whole INDIGO interface module"""
         if self.camera.connected() or self.terminal_failure:
             return
         else:
@@ -56,7 +57,7 @@ class CameraAdapter:
             time.sleep(1)
             reload(self.camera)
             if not self.camera.connected():
-                logging.info("Reloading unsuccessful, camera is in terminal failure state")
+                logging.info("Reloading unsuccessful, camera is in terminal failure state :(")
                 self.terminal_failure = True
             logging.info("Reloading successful, camera operating")
 
@@ -65,21 +66,28 @@ class CameraAdapter:
 
         This is the only coroutine that should be launched from outside!"""
         return await asyncio.gather(
-            self._regularly_take_shots('preview', self._preview_generation_callback),
-            self._regularly_take_shots('savetodisk', self._fits_saving_callback),
+            self._regularly_take_shots(CameraMode.PREVIEW, self._preview_generation_callback),
+            self._regularly_take_shots(CameraMode.SAVE_TO_DISK, self._fits_saving_callback, enabled=self.save_to_disk_enabled),  # noqa
+
             # testing is usually turned off on server (enabled: False in config)
-            self._regularly_take_shots('testing', lambda *args: logging.debug('testing callback run'))
+            self._regularly_take_shots(CameraMode.TESTING, lambda *args: logging.debug('testing callback run'))
         )
 
-    def _regularly_take_shots(self, config_id, callback):
+    def _regularly_take_shots(
+        self, mode_id: CameraMode, callback: Callable[[Any], None], enabled: Callable[[Dict], bool] = None
+    ):
         """Coroutine factory, return coroutine that regularly takes shots with given
-        config_id (see camconfig.yaml) and callback. Conflicts are resolved with lock"""
+        mode_id (see camconfig.yaml) and callback. Conflicts are resolved with lock"""
+
+        if enabled is None:
+            def enabled(config_entry) -> bool:
+                return config_entry and config_entry['enabled'] is True
 
         async def unlock_camera():
             if DEBUG_LOCK:
-                logging.debug(f'{config_id} releasing lock')
+                logging.debug(f'{mode_id} releasing lock')
             self.camera_lock.release()
-            self.operation_pending[config_id] = False
+            self.operation_pending[mode_id] = False
 
         def camera_freeing(callback, loop):
             def decorated_callback(*args):
@@ -93,16 +101,16 @@ class CameraAdapter:
         async def coro():
             """The actual coroutine that can be put into an event loop"""
             while True:
-                config_entry = get_camera_config().get(config_id, None)
-                if config_entry and config_entry['enabled'] is True and not self.operation_pending[config_id]:
+                config_entry = camera_config.get(mode_id, None)
+                if enabled(config_entry) and not self.operation_pending[mode_id]:
                     start = time.time()
                     loop = asyncio.get_running_loop()
                     if DEBUG_LOCK:
-                        logging.debug(f'{config_id} awaiting lock')
-                    self.operation_pending[config_id] = True
+                        logging.debug(f'{mode_id} awaiting lock')
+                    self.operation_pending[mode_id] = True
                     await self.camera_lock.acquire()
                     if DEBUG_LOCK:
-                        logging.debug(f'{config_id} got lock')
+                        logging.debug(f'{mode_id} got lock')
                     self.camera.take_shot(
                         config_entry['exposure'],
                         config_entry['gain'],
@@ -119,21 +127,19 @@ class CameraAdapter:
     @handles_errors(lambda e: logging.error(f"Error in preview generation callback: {e}"))
     @accepts_hdu_list
     def _preview_generation_callback(self, hdul: HDUList):
-        logging.debug('preview callback run')
+        logging.debug('generating preview image...')
         inmem_file = BytesIO()
         fitsutils.save_fits_as_jpeg(hdul, inmem_file)
         inmem_file.seek(0)
         self.preview = inmem_file.getvalue()
         self.preview_metadata = fitsutils.extract_metadata(hdul)
-        self.preview_metadata.update({'Current datetime': datetime.now().strftime(r"%Y_%m_%d_%H_%M_%S")})
+        self.preview_metadata.update(
+            {
+                'server_datetime': datetime.now().strftime(r"%X %x"),
+                'period': camera_config[CameraMode.PREVIEW]['period']
+            }
+        )
         self.new_preview_ready.set()
-
-    @handles_errors(lambda e: logging.error(f"Error in FITS saving callback: {e}"))
-    @accepts_hdu_list
-    def _fits_saving_callback(self, hdul: HDUList):
-        file_path = str(FITS_DIR / self._generate_image_name('image', 'fits'))
-        # logging.info(f'saving FITS image to {file_path}')
-        hdul.writeto(file_path)
 
     async def preview_feed_generator(self):
         """Async generator yielding new preview shots as they arise, for outside use"""
@@ -141,6 +147,22 @@ class CameraAdapter:
             await self.new_preview_ready.wait()
             self.new_preview_ready.clear()
             yield self.preview, self.preview_metadata
+
+    @handles_errors(lambda e: logging.error(f"Error in FITS saving callback: {e}"))
+    @accepts_hdu_list
+    def _fits_saving_callback(self, hdul: HDUList):
+        file_path = str(FITS_DIR / self._generate_image_name('image', 'fits'))
+        logging.debug(f'saving FITS image to {file_path}...')
+        hdul.writeto(file_path)
+
+    @staticmethod
+    def save_to_disk_enabled(config_entry):
+        if not (config_entry and config_entry['enabled'] is True):
+            return False
+        if config_entry.get('override', False):
+            return True
+        conditions = observation_conditions()
+        return conditions['is_astronomical_night'] and conditions['is_moonless']
 
     @staticmethod
     def _generate_image_name(prefix: str, format_: str) -> str:

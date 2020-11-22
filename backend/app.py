@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from camera_adapter import CameraAdapter
 import camera_config
+from observation_conditions import observation_conditions
 
 
 env_path = (Path(__file__).parent / '.quartenv').resolve()
@@ -49,6 +50,11 @@ async def latest_camera_metadata():
         return {"message": "Try reconnecting camera"}, 500
     else:
         return camera.preview_metadata
+
+
+@app.route('/api/observation-conditions')
+async def obs_conditions():
+    return observation_conditions()
 
 
 @app.route('/api/force-camera-reconnect')
