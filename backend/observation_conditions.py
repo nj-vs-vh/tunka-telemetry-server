@@ -14,7 +14,7 @@ def heating_controller_info():
 
     controller_tty = "/dev/ttyACM0"
     try:
-        with open(controller_tty, 'w') as controller:
+        with open(controller_tty, 'r') as controller:
             data = controller.readline().strip()
         data = data.split(', ')
         return {
