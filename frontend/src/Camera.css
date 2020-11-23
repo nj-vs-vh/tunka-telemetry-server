@@ -22,6 +22,7 @@
 
 .metadata-line {
   /* background-color: red; */
+  padding-top: 10px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;

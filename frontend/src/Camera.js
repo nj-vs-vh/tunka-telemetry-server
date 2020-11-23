@@ -21,11 +21,11 @@ export function CameraFeed() {
             <div className="camera-col">
                 <img src="/api/camera-feed" alt="from ZWO ASI camera" className="camera-feed"></img>
                 <span className="metadata-line">
-                    <span>Exposure: {metadata.exposure} sec</span>
+                    <span>exposure: {metadata.exposure}s</span>
                     <span>gain: {metadata.gain}</span>
-                    <span>period: {metadata.period} sec</span>
+                    <span>period: {metadata.period}s</span>
                     <span>camera temperature: {metadata.device_temperature}°C</span>
-                    <span>shot at: {metadata.shot_datetime}</span>
+                    <span>shot at: {new Date(metadata.shot_datetime).toLocaleTimeString('ru-RU')}</span>
                 </span>
             </div>
         </div>
