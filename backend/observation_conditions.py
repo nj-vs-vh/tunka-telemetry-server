@@ -3,7 +3,27 @@ import ephem
 import pytz
 from math import pi
 
+import logging
+
 from typing import Dict, Any, Union
+
+
+def heating_controller_info():
+    def value_from_key_equals_value(k_eq_v: str) -> str:
+        return k_eq_v.split('=')[1].strip(r'°CW%')
+
+    controller_tty = "/dev/ttyACM0"
+    try:
+        with open(controller_tty, 'w') as controller:
+            data = controller.readline().strip()
+        data = data.split(', ')
+        return {
+            'external_temp': value_from_key_equals_value(data[-2]),
+            'external_humidity': value_from_key_equals_value(data[-1]),
+        }
+    except Exception as e:
+        logging.exception(f'Exception while reading from heating controller TTY: {e}')
+        return dict()
 
 
 def to_radians(degrees: float) -> float:
@@ -60,7 +80,8 @@ def observation_conditions() -> Dict[str, Any]:
         'moonset': {
             'previous': localtime_str(sit.previous_setting(moon)),
             'next': localtime_str(sit.next_setting(moon))
-        }
+        },
+        **heating_controller_info(),
     }
 
 
