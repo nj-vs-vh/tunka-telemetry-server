@@ -18,8 +18,7 @@ def save_fits_as_jpeg(hdul: HDUList, filename: str):
     image_data: NDArray = hdul[0].data.copy()
     if image_data.ndim == 3:
         image_data = np.transpose(image_data, (1, 2, 0))
-        for i in range(3):
-            image_data[:, :, i] = normalize_frame(image_data[:, :, i])
+        image_data = normalize_frame(image_data)
         image = Image.fromarray(image_data, 'RGB')
     elif image_data.ndim == 2:
         image_data = normalize_frame(image_data)

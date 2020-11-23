@@ -39,9 +39,14 @@ def update_config(verbose: bool):
                 )
     if verbose:
         config_diff = diff(camera_config, new_config)
-        change_str = ''
-        for change in config_diff:
-            change_str += f'\t\t{".".join(str(field) for field in change[1])}: "{change[2][0]}" => "{change[2][1]}"\n'
+        try:
+            change_str = ''
+            for change in config_diff:
+                change_str += (
+                    f'\t\t{".".join(str(field) for field in change[1])}: "{change[2][0]}" => "{change[2][1]}"\n'
+                )
+        except Exception:
+            change_str = '\t\tSorry, unable to display diff'
         logging.info('config file updated:\n' + change_str)
     camera_config.update(new_config)
 
