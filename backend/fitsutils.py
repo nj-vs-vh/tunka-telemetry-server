@@ -15,7 +15,7 @@ def normalize_frame(frame: NDArray, bits: int = 8) -> NDArray:
 
 
 def save_fits_as_jpeg(hdul: HDUList, filename: str):
-    image_data: NDArray = hdul[0].data
+    image_data: NDArray = hdul[0].data.copy()
     if image_data.ndim == 3:
         image_data = np.transpose(image_data, (1, 2, 0))
         for i in range(3):
