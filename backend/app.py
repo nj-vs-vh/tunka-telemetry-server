@@ -47,7 +47,7 @@ async def camera_feed():
 @app.route('/api/latest-camera-metadata')
 async def latest_camera_metadata():
     if camera.preview_metadata is None:
-        return {"message": "Try reconnecting camera"}, 500
+        return {"message": "No available metadata"}, 500
     else:
         return camera.preview_metadata
 
