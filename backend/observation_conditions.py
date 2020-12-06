@@ -15,7 +15,9 @@ def heating_controller_info():
     controller_tty = "/dev/ttyACM0"
     try:
         with open(controller_tty, 'r') as controller:
-            data = controller.readline().strip()
+            print(controller.read(1))
+            # data = controller.readline().strip()
+        data = 'a=1, b=2, c=3'
         data = data.split(', ')
         return {
             'external_temp': value_from_key_equals_value(data[-2]),
@@ -81,7 +83,7 @@ def observation_conditions() -> Dict[str, Any]:
             'previous': localtime_str(sit.previous_setting(moon)),
             'next': localtime_str(sit.next_setting(moon))
         },
-        **heating_controller_info(),
+        # **heating_controller_info(),
     }
 
 
