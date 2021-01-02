@@ -167,7 +167,7 @@ class CameraAdapter:
     @staticmethod
     def _generate_image_name(prefix: str, format_: str) -> str:
         """Helper function to generate unique filenames like 'some_prefix_2020_10_15_19_21_39.image_format'"""
-        return f'{prefix}_{datetime.now().strftime(r"%Y_%m_%d_%H_%M_%S")}.{format_}'
+        return f'{prefix}_{datetime.utcnow().strftime(r"%Y_%m_%d_%H_%M_%S")}.{format_}'
 
 
 if __name__ == "__main__":
