@@ -15,6 +15,9 @@ import camera_config
 from observation_conditions import observation_conditions
 
 
+exit("Backend is WIP, fixing camera interface")
+
+
 env_path = (Path(__file__).parent / '.quartenv').resolve()
 load_dotenv(env_path)
 
