@@ -220,3 +220,5 @@ images
 camconfig.yaml
 backend/.indigoenv
 backend/.quartenv
+
+pyindigo
