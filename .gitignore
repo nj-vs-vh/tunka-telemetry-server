@@ -221,4 +221,4 @@ camconfig.yaml
 backend/.indigoenv
 backend/.quartenv
 
-pyindigo
+pyindigo_source
