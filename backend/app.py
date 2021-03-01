@@ -1,7 +1,7 @@
 import os
 import asyncio
 
-import logging
+from pyindigo import logging
 
 from quart import Quart, Response
 from hypercorn.asyncio import serve
@@ -15,10 +15,7 @@ import camera_config
 from observation_conditions import observation_conditions
 
 
-exit("Backend is WIP, fixing camera interface")
-
-
-env_path = (Path(__file__).parent / '.quartenv').resolve()
+env_path = (Path(__file__).parent / '.env').resolve()
 load_dotenv(env_path)
 
 # see https://docs.python.org/3/library/logging.html#logging.basicConfig
@@ -30,11 +27,14 @@ log_level = os.environ.get("LOG_LEVEL", None)
 if log_level:
     logging_config['level'] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
 logging.basicConfig(**logging_config)
+logging.pyindigoConfig(log_device_connection=True, lop_callback_exceptions=True)
 
-
-camera = CameraAdapter()
 
 app = Quart(__name__)
+
+loop = asyncio.get_event_loop()
+
+camera = CameraAdapter(mode=os.environ.get('CAMERA_MODE', None), loop=loop)
 
 
 @app.route('/api/camera-feed')
@@ -71,7 +71,6 @@ async def force_camera_reconnect():
 
 # running camera and server concurrently in asyncio event loop
 
-loop = asyncio.get_event_loop()
 loop.create_task(camera.operate())
 loop.create_task(camera_config.update_on_the_fly())
 

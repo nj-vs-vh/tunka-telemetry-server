@@ -40,3 +40,13 @@ def extract_metadata(hdul: HDUList) -> Dict[str, Any]:
     for fits_key, meta_key in fits_fields_to_metadata_fields.items():
         metadata[meta_key] = fits_header_dict.get(fits_key, 'NOT SET')
     return metadata
+
+
+def fits_bytes_to_hdu_list(fits_bytes: bytes) -> HDUList:
+    if isinstance(fits_bytes, bytes):
+        try:
+            return HDUList.fromstring(fits_bytes)
+        except Exception:
+            raise ValueError("Unable to convert bytes to HDUList object")
+    else:
+        raise TypeError(f"Expected bytes as an argument, got {fits_bytes.__class__.__name__}")

@@ -13,7 +13,7 @@ CONFIG_PATH = Path(__file__).parent / '../camconfig.yaml'
 camera_config = dict()
 
 
-class CameraMode(Enum):
+class ShotType(Enum):
     """Keys from camconfig.yaml"""
 
     PREVIEW = 'preview'
@@ -28,14 +28,14 @@ def update_config(verbose: bool):
     with open(CONFIG_PATH, 'r') as f:
         raw_new_config = yaml.safe_load(f)
         new_config = dict()
-        for raw_key, mode_config in raw_new_config.items():
+        for raw_key, shot_type_config in raw_new_config.items():
             try:
-                mode = CameraMode(raw_key)
-                new_config[mode] = mode_config
+                shot_type = ShotType(raw_key)
+                new_config[shot_type] = shot_type_config
             except ValueError:
                 logging.exception(
-                    f'Invalid mode name "{raw_key}" in camconfig.yaml, ignoring! '
-                    + f'Valid mode names are {", ".join(str(mode) for mode in list(CameraMode))}'
+                    f'Invalid shot type name "{raw_key}" in camconfig.yaml, ignoring! '
+                    + f'Valid shot type names are {", ".join(str(shot_type) for shot_type in list(ShotType))}'
                 )
     if verbose:
         config_diff = diff(camera_config, new_config)
@@ -48,6 +48,7 @@ def update_config(verbose: bool):
         except Exception:
             change_str = '\t\tSorry, unable to display diff'
         logging.info('config file updated:\n' + change_str)
+
     camera_config.update(new_config)
 
 
