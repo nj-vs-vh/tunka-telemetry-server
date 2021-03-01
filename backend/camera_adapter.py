@@ -28,7 +28,7 @@ from pyindigo.core.enums import IndigoDriverAction, IndigoPropertyState
 
 driver = IndigoDriver("indigo_ccd_simulator")
 
-DEBUG_LOCK = True
+DEBUG_LOCK = False
 
 FITS_DIR = Path(__file__).parent.parent / "images"
 FITS_DIR.mkdir(exist_ok=True)

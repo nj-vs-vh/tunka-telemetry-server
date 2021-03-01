@@ -79,3 +79,4 @@ try:
         )
 finally:
     loop.close()
+    logging.info("==================== CAMERA SERVER OFFLINE ====================")
