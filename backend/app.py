@@ -1,22 +1,19 @@
 import os
 import asyncio
-
-from pyindigo import logging
+from pathlib import Path
 
 from quart import Quart, Response
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
 
-from pathlib import Path
-from dotenv import load_dotenv
+from pyindigo import logging
 
 from camera_adapter import CameraAdapter
 import camera_config
 from observation_conditions import observation_conditions
 
+import read_dotenv  # noqa
 
-env_path = (Path(__file__).parent / '.env').resolve()
-load_dotenv(env_path)
 
 # see https://docs.python.org/3/library/logging.html#logging.basicConfig
 logging_config = {'format': r'[%(asctime)s] %(levelname)s: %(message)s', 'datefmt': r'%x %X'}

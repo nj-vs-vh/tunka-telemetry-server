@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import asyncio
 import time
@@ -11,10 +12,6 @@ from datetime import datetime
 from astropy.io.fits import HDUList
 from io import BytesIO
 
-import fitsutils
-from camera_config import camera_config, ShotType
-from observation_conditions import observation_conditions, localtime_str
-
 from pyindigo.models.driver import IndigoDriver
 import pyindigo.models.client as IndigoClient
 
@@ -25,13 +22,20 @@ from pyindigo.core.properties import (
 from pyindigo.core.properties.schemas import UserDefinedItem
 from pyindigo.core.enums import IndigoDriverAction, IndigoPropertyState
 
+import fitsutils
+from camera_config import camera_config, ShotType
+from observation_conditions import observation_conditions, localtime_str
+
+
+import read_dotenv  # noqa
+
 
 driver = IndigoDriver("indigo_ccd_simulator")
 
-DEBUG_LOCK = False
-
 FITS_DIR = Path(__file__).parent.parent / "images"
 FITS_DIR.mkdir(exist_ok=True)
+
+DEBUG_LOCK = os.environ.get('DEBUG_CAMERA_LOCK', 'no') == 'yes'
 
 
 class CameraAdapter:
