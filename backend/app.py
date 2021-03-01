@@ -60,15 +60,6 @@ async def obs_conditions():
     return observation_conditions()
 
 
-@app.route('/api/force-camera-reconnect')
-async def force_camera_reconnect():
-    camera.reconnect()
-    if camera.terminal_failure:
-        return {"message": "Camera has failed and cannot be reconnected, server reboot required :("}, 500
-    else:
-        return {"message": "Reconnected ok"}, 200
-
-
 # running camera and server concurrently in asyncio event loop
 
 loop.create_task(camera.operate())
