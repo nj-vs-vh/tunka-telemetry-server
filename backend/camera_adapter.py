@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from typing import Callable, Any, Dict
 
-import logging
+from pyindigo import logging
 
 from datetime import datetime
 from astropy.io.fits import HDUList
@@ -20,7 +20,6 @@ import pyindigo.models.client as IndigoClient
 
 from pyindigo.core.properties import (
     IndigoProperty,
-    BlobVectorProperty,
     CCDSpecificProperties,
 )
 from pyindigo.core.properties.schemas import UserDefinedItem
@@ -29,7 +28,7 @@ from pyindigo.core.enums import IndigoDriverAction, IndigoPropertyState
 
 driver = IndigoDriver("indigo_ccd_simulator")
 
-DEBUG_LOCK = False
+DEBUG_LOCK = True
 
 FITS_DIR = Path(__file__).parent.parent / "images"
 FITS_DIR.mkdir(exist_ok=True)
@@ -94,15 +93,13 @@ class CameraAdapter:
         shot_type (see camconfig.yaml) and callback. Conflicts are resolved with lock"""
 
         if enabled is None:
-
-            def enabled(config_entry) -> bool:
-                return config_entry and config_entry["enabled"] is True
+            enabled = lambda config_entry: config_entry and config_entry["enabled"] is True  # noqa
 
         shot_pending = False
 
         async def coro():
             """The actual coroutine that can be put into an event loop"""
-            nonlocal shot_pending
+            nonlocal shot_pending  # saving flag in coroutine func's closure
 
             while True:
                 config_entry = camera_config.get(shot_type, None)
@@ -120,28 +117,29 @@ class CameraAdapter:
                 else:
                     shot_duration = 0
 
-                SLEEP_BETWEEN_PENDING_PROBES = 3  # sec
-                await asyncio.sleep(max(config_entry["period"] - shot_duration, SLEEP_BETWEEN_PENDING_PROBES))
+                SLEEP_BETWEEN_PENDING_PROBE = 3  # sec
+                await asyncio.sleep(max(config_entry["period"] - shot_duration, SLEEP_BETWEEN_PENDING_PROBE))
 
         return coro()
 
     async def take_shot(self, exposure: float, gain: float, color_mode: str, callback: Callable):
+        """Basic camera action, coroutine function that wraps callback-based Indigo stuff."""
         exposure_result = {"prop": None}
         exposure_done = asyncio.Event()
         exposure_done.clear()
 
         async def get_exposure_results(action: IndigoDriverAction, prop: IndigoProperty):
-            if DEBUG_LOCK:
-                logging.debug("exposure done")
             exposure_result["prop"] = prop
             exposure_done.set()
 
         if DEBUG_LOCK:
             import random
-
             pseudouid = random.randint(1, 100)
             logging.debug(f"waiting for camera lock (pseudo id={pseudouid})")
+
         async with self.camera_lock:
+            if DEBUG_LOCK:
+                logging.debug(f"lock acquired (pseudo id={pseudouid})")
             self.device.callback(
                 get_exposure_results,
                 accepts={
@@ -164,7 +162,7 @@ class CameraAdapter:
             time.sleep(0.1)  # safety sleep
             self.device.set_property(CCDSpecificProperties.CCD_EXPOSURE, EXPOSURE=exposure)
             await exposure_done.wait()
-            image_prop: BlobVectorProperty = exposure_result["prop"]
+            image_prop = exposure_result["prop"]
             callback(fitsutils.fits_bytes_to_hdu_list(image_prop.items[0].value))
             if DEBUG_LOCK:
                 logging.debug(f"releasing camera lock (pseudo id={pseudouid})")
@@ -212,6 +210,9 @@ class CameraAdapter:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    logging.pyindigoConfig(log_device_connection=True, lop_callback_exceptions=True)
+
     loop = asyncio.get_event_loop()
     camera_adapter = CameraAdapter(mode="Simulator", loop=loop)
     loop.create_task(camera_adapter.operate())
