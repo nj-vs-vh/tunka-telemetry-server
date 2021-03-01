@@ -218,7 +218,6 @@ images
 *.png
 
 camconfig.yaml
-backend/.indigoenv
-backend/.quartenv
+backend/.env
 
 pyindigo_source
