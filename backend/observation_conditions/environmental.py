@@ -74,7 +74,7 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
             format_name = lambda measurement: (
                 measurement.name.replace('_', '-').upper()
                 + '-'
-                + measurement.units.encode('ascii', errors='ignore').decode().upper()
+                + measurement.unit.encode('ascii', errors='ignore').decode().upper()
             )
         else:
             raise ValueError(f"Unknown key_style {key_style}. Options are 'json' and 'fits'!")
