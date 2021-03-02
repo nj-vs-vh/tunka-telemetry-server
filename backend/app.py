@@ -24,12 +24,13 @@ log_level = os.environ.get("LOG_LEVEL", None)
 if log_level:
     logging_config['level'] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
 logging.basicConfig(**logging_config)
-logging.pyindigoConfig(
-    log_device_connection=True,
-    log_callback_exceptions=True,
-    log_driver_actions=True,
-    log_property_set=True,
-)
+
+indigo_debug_settings = os.environ.get("INDIGO_DEBUG", None)
+if indigo_debug_settings:
+    indigo_debug_args = {
+        f'log_{setting.strip().lower()}': True for setting in indigo_debug_settings.split(',')
+    }
+    logging.pyindigoConfig(**indigo_debug_args)
 
 
 app = Quart(__name__)
