@@ -10,7 +10,7 @@ from pyindigo import logging
 
 from camera_adapter import CameraAdapter
 import camera_config
-from observation_conditions import observation_conditions
+from observation_conditions import get_observation_conditions, EnvironmentalConditionsReadingProtocol
 
 import read_dotenv  # noqa
 
@@ -33,11 +33,18 @@ if indigo_debug_settings:
     logging.pyindigoConfig(**indigo_debug_args)
 
 
-app = Quart(__name__)
-
 loop = asyncio.get_event_loop()
 
+if os.environ.get('READ_FROM_TTY_CONTROLLER', None) == 'yes':
+    EnvironmentalConditionsReadingProtocol.activate(loop)
+
 camera = CameraAdapter(mode=os.environ.get('CAMERA_MODE', None), loop=loop)
+loop.create_task(camera.operate())
+
+loop.create_task(camera_config.update_on_the_fly())
+
+
+app = Quart(__name__)
 
 
 @app.route('/api/camera-feed')
@@ -60,13 +67,8 @@ async def latest_camera_metadata():
 
 @app.route('/api/observation-conditions')
 async def obs_conditions():
-    return observation_conditions()
+    return get_observation_conditions()
 
-
-# running camera and server concurrently in asyncio event loop
-
-loop.create_task(camera.operate())
-loop.create_task(camera_config.update_on_the_fly())
 
 serve_with = os.environ.get('SERVE_WITH', None)
 

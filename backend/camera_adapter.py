@@ -24,7 +24,8 @@ from pyindigo.core.enums import IndigoDriverAction, IndigoPropertyState
 
 import fitsutils
 from camera_config import camera_config, ShotType
-from observation_conditions import observation_conditions, localtime_str
+from observation_conditions.celestial import get_celestial_observation_conditions, localtime_str
+from observation_conditions.environmental import EnvironmentalConditionsReadingProtocol
 
 
 import read_dotenv  # noqa
@@ -196,6 +197,10 @@ class CameraAdapter:
     def _fits_saving_callback(self, hdul: HDUList):
         file_path = str(FITS_DIR / self._generate_image_name("image", "fits"))
         logging.debug(f"saving FITS image to {file_path}...")
+        environment = EnvironmentalConditionsReadingProtocol.current_measurements_as_dict(key_style='fits')
+        print(environment)
+        for key, value in environment.items():
+            hdul[0].header[key] = value
         hdul.writeto(file_path)
 
     @staticmethod
@@ -204,7 +209,7 @@ class CameraAdapter:
             return False
         if config_entry.get("override", False):
             return True
-        conditions = observation_conditions()
+        conditions = get_celestial_observation_conditions()
         return conditions["is_astronomical_night"] and conditions["is_moonless"]
 
     @staticmethod
