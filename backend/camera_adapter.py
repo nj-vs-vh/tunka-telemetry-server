@@ -113,7 +113,7 @@ class CameraAdapter:
                     await self.take_shot(
                         config_entry["exposure"],
                         config_entry["gain"],
-                        color_mode=config_entry.get("color_mode", "rgb").upper(),
+                        color_mode=config_entry.get("color_mode", "rgb").lower(),
                         callback=callback,
                     )
                     shot_pending = False
