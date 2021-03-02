@@ -14,7 +14,7 @@ from pyindigo import logging
 
 CONTROLLER_TTY = "/dev/ttyACM0"
 
-LOGS_DIR = Path(__file__).parent.parent / "observation-conditions-logs"
+LOGS_DIR = Path(__file__).parent.parent.parent / "observation-conditions-logs"
 
 
 @dataclass
