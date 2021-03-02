@@ -207,7 +207,7 @@ dmypy.json
 indgenv
 
 indigo
-experiments
+experiments/**
 images
 *bin*
 *build*
