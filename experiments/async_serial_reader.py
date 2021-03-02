@@ -6,6 +6,11 @@ CONTROLLER_TTY = "/dev/ttyACM0"
 
 
 class MeasurementsReadingProtocol(asyncio.Protocol):
+
+    def __init__(self):
+        super().__init__()
+        self.buffer = bytes()
+
     def connection_made(self, transport):
         self.transport = transport
 
@@ -13,7 +18,10 @@ class MeasurementsReadingProtocol(asyncio.Protocol):
         self.transport.loop.stop()
 
     def data_received(self, data):
-        print('data received', repr(data))
+        self.buffer += data
+        if b'\n' in data:
+            print(self.buffer)
+            self.buffer = bytes()
 
     def pause_writing(self):
         pass
@@ -25,7 +33,7 @@ class MeasurementsReadingProtocol(asyncio.Protocol):
 async def dummy():
     while True:
         print('...')
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
 
 loop = asyncio.get_event_loop()
