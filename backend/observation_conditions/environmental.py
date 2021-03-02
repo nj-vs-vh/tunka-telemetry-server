@@ -51,6 +51,8 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
     def process_buffer(self):
         m = self.parse_measurement_set(self.buffer.decode())
         self._current_measurement_set = m
+        from pyindigo import logging
+        logging.info(m)
 
     @classmethod
     def current_measurements_as_dict(self, key_style: str = 'json') -> Dict[str, str]:
