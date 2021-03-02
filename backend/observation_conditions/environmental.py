@@ -56,11 +56,11 @@ class MeasurementSet:
                     'EXTERNAL': 'EXT',
                     'HUMIDITY-%': 'HUM'
                 }.items():
-                    name.sub(patt, sub)
+                    name.replace(patt, sub)
                 return name
 
             format_name = format_name_for_fits
-            timestamp_key = 'OBS-CONDITIONS-MEASUREMENT-UTCTIME'
+            timestamp_key = 'OBS-UTC'
         elif key_style == 'tsv':
             format_name = lambda measurement: (
                 measurement.name.replace('_', ' ').capitalize() + ', ' + measurement.unit
