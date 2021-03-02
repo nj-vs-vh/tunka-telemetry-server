@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
-import TaigaLogo from './TaigaLogo1Black.png'
-import Octocat from './GitHub-Mark-64px.png'
+import TaigaLogo from './img/TaigaLogo1Black.png'
+import Octocat from './img/GitHub-Mark-64px.png'
 
 import CameraFeed from './Camera'
 import ObservationConditionsBar from './ObservationConditionsBar'

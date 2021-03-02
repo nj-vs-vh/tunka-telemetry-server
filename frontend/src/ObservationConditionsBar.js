@@ -1,9 +1,11 @@
 import React, { useState, useEffect }  from 'react';
 import getFetchEffect from './fetchState'
 
-import ClockIcon from './clock-icon.png'
-import SunIcon from './sun-icon.png'
-import MoonIcon from './moon-icon.png'
+import ClockIcon from './img/icons/clock.png'
+import SunIcon from './img/icons/sun.png'
+import MoonIcon from './img/icons/moon.png'
+import TemperatureIcon from './img/icons/termometer.png'
+import HumidityIcon from './img/icons/droplet.png'
 
 import './ObservationConditionsBar.css'
 
@@ -24,8 +26,7 @@ function ObservationConditionsBar(props) {
     useEffect(() => {
         let interval = setInterval( () => {setLocalTime(localTime+1000)}, 1000);
         return () => clearInterval(interval);
-        }
-    );
+    });
 
     if (obsCond === null) {
         return <div className="obscondbar">Loading...</div>
@@ -51,6 +52,14 @@ function ObservationConditionsBar(props) {
                     ', ' + (obsCond.is_moonless ? 'rises' : 'sets') + ' at '
                     + new Date(obsCond.is_moonless ? obsCond.moonrise.next : obsCond.moonset.next).toLocaleTimeString('ru-RU')
                 }
+            </span>
+            <img src={TemperatureIcon} className="baricon" alt=""></img>
+            <span className="bartext">
+                { !('external_temperature' in obsCond) ? 'Unavailable' : `${obsCond.external_temperature} °C`}
+            </span>
+            <img src={HumidityIcon} className="baricon" alt=""></img>
+            <span className="bartext">
+                { !('external_humidity' in obsCond) ? 'Unavailable' : `${obsCond.external_humidity} %`}
             </span>
         </div>
     }
