@@ -42,14 +42,25 @@ class MeasurementSet:
         """
         if key_style == 'json':
             format_name = lambda measurement: measurement.name
-            timestamp_key = 'environmental_obs_conditions_timestamp'
+            timestamp_key = 'environmental_obs_conditions_timestamp_utc'
         elif key_style == 'fits':
-            format_name = lambda measurement: (
-                measurement.name.replace('_', '-').upper()
-                + '-'
-                + measurement.unit.encode('ascii', errors='ignore').decode().upper()
-            )
-            timestamp_key = 'ENVIRONMENTAL-OBS-CONDITIONS-TIMESTAMP'
+            def format_name_for_fits(measurement: Measurement) -> str:
+                name = measurement.name.replace('_', '-').upper()
+                for patt, sub in {  # name shortening is applied here
+                    'WINDOW': 'WND',
+                    'TEMPERATURE': 'T',
+                    'HEATING-POWER': 'POW',
+                    'CAMERA': 'CAM',
+                    'IS-ON': 'ON',
+                    'ARDUINO': 'INO',
+                    'EXTERNAL': 'EXT',
+                    'HUMIDITY-%': 'HUM'
+                }.items():
+                    name.sub(patt, sub)
+                return name
+
+            format_name = format_name_for_fits
+            timestamp_key = 'OBS-CONDITIONS-MEASUREMENT-UTCTIME'
         elif key_style == 'tsv':
             format_name = lambda measurement: (
                 measurement.name.replace('_', ' ').capitalize() + ', ' + measurement.unit
