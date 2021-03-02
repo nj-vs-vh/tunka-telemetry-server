@@ -1,11 +1,14 @@
 import asyncio
 import serial_asyncio
+from serial.serialutil import SerialException
 
 from datetime import datetime
 
 import re
 from dataclasses import dataclass
 from typing import List, Optional, Dict
+
+from pyindigo import logging
 
 
 CONTROLLER_TTY = "/dev/ttyACM0"
@@ -40,7 +43,10 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
     @classmethod
     def activate(cls, loop):
         """Activate protocol = start listening for serial messages while attached to the given loop"""
-        loop.run_until_complete(serial_asyncio.create_serial_connection(loop, cls, CONTROLLER_TTY))
+        try:
+            loop.run_until_complete(serial_asyncio.create_serial_connection(loop, cls, CONTROLLER_TTY))
+        except SerialException as e:
+            logging.warning(f"Problem opening TTY controller, continuing without it. Details: {e}")
 
     def process_buffer(self):
         m = self.parse_measurement_set(self.buffer.decode())
