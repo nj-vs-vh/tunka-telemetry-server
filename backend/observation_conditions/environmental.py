@@ -36,6 +36,10 @@ class MeasurementSet:
 class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
     _current_measurement_set: Optional[MeasurementSet] = None
 
+    @classmethod
+    def set_current_measurement_set(cls, ms):
+        cls._current_measurement_set = ms
+
     def __init__(self):
         super().__init__()
         self.buffer = bytes()
@@ -49,10 +53,9 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
             logging.warning(f"Problem opening TTY controller, continuing without it. Details: {e}")
 
     def process_buffer(self):
-        m = self.parse_measurement_set(self.buffer.decode())
-        self._current_measurement_set = m
-        from pyindigo import logging
-        logging.info(m)
+        self.set_current_measurement_set(
+            self.parse_measurement_set(self.buffer.decode())
+        )
 
     @classmethod
     def current_measurements_as_dict(self, key_style: str = 'json') -> Dict[str, str]:
@@ -97,10 +100,14 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
             try:
                 name, value = measurement_str.split('=')
             except ValueError:  # special case for 'Fan off'
-                name, value = measurement_str.split(' ')
-                value = '1' if value == 'on' else '0'
-            except Exception:
-                continue
+                try:
+                    name, value = measurement_str.split(' ')
+                    value = '1' if value == 'on' else '0'
+                except Exception as e:
+                    logging.warning(
+                        f"Error while parsing measurement read from TTY controller '{measurement_str}': {e}"
+                    )
+                    continue
 
             name = measurement_names_mapping.get(name, name)
             value_and_unit_split = re.split(r'([^\-\.0-9])', value.strip(), maxsplit=1)
