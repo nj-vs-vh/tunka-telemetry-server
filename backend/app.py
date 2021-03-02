@@ -36,6 +36,7 @@ if indigo_debug_settings:
 loop = asyncio.get_event_loop()
 
 if os.environ.get('READ_FROM_TTY_CONTROLLER', None) == 'yes':
+    print('tryin')
     EnvironmentalConditionsReadingProtocol.activate(loop)
 
 camera = CameraAdapter(mode=os.environ.get('CAMERA_MODE', None), loop=loop)
