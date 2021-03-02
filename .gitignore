@@ -209,6 +209,7 @@ indgenv
 indigo
 experiments/**
 images
+observation-conditions-logs
 *bin*
 *build*
 *.txt

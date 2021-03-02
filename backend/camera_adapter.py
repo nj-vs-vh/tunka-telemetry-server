@@ -197,10 +197,17 @@ class CameraAdapter:
     def _fits_saving_callback(self, hdul: HDUList):
         file_path = str(FITS_DIR / self._generate_image_name("image", "fits"))
         logging.debug(f"saving FITS image to {file_path}...")
-        environment = EnvironmentalConditionsReadingProtocol.current_measurements_as_dict(key_style='fits')
-        print(environment)
+        environment = EnvironmentalConditionsReadingProtocol.current_measurements_as_dict(
+            key_style='fits', include_timestamp=False
+        )
         for key, value in environment.items():
-            hdul[0].header[key] = value
+            try:
+                hdul[0].header[key] = float(value)
+            except ValueError:
+                hdul[0].header[key] = value
+                logging.warning(
+                    f'Could not convert value {value} to float before writing it to FITS header, written as string'
+                )
         hdul.writeto(file_path)
 
     @staticmethod

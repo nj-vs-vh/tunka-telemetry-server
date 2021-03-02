@@ -3,6 +3,7 @@ import serial_asyncio
 from serial.serialutil import SerialException
 
 from datetime import datetime
+from pathlib import Path
 
 import re
 from dataclasses import dataclass
@@ -12,6 +13,8 @@ from pyindigo import logging
 
 
 CONTROLLER_TTY = "/dev/ttyACM0"
+
+LOGS_DIR = Path(__file__).parent.parent / "observation-conditions-logs"
 
 
 @dataclass
@@ -29,6 +32,38 @@ class MeasurementSet:
     measurements: List[Measurement]
     timestamp: datetime
 
+    def as_dict(self, key_style: str = 'json', include_timestamp: bool = False) -> Dict[str, str]:
+        """"Set of measurements formatted as dict.
+        
+        Keys can be formatted as
+            (1) valid identifiers, to use as JSON key
+            (2) all-caps names with units integrated, to use in FITS headers
+            (3) Human-readable, to use in tsv header
+        """
+        if key_style == 'json':
+            format_name = lambda measurement: measurement.name
+            timestamp_key = 'environmental_obs_conditions_timestamp'
+        elif key_style == 'fits':
+            format_name = lambda measurement: (
+                measurement.name.replace('_', '-').upper()
+                + '-'
+                + measurement.unit.encode('ascii', errors='ignore').decode().upper()
+            )
+            timestamp_key = 'ENVIRONMENTAL-OBS-CONDITIONS-TIMESTAMP'
+        elif key_style == 'tsv':
+            format_name = lambda measurement: (
+                measurement.name.replace('_', '-').title() + ', ' + measurement.unit
+            )
+            timestamp_key = 'timestamp'
+        else:
+            raise ValueError(f"Unknown key_style {key_style}. Options are 'json', 'fits' or 'tsv'!")
+        result = dict()
+        if include_timestamp:
+            result[timestamp_key] = self.timestamp
+        for m in self.measurements:
+            result[format_name(m)] = m.value
+        return result
+
     def __str__(self) -> str:
         return f"[{self.timestamp}] {'; '.join([str(m) for m in self.measurements])}"
 
@@ -37,7 +72,7 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
     _current_measurement_set: Optional[MeasurementSet] = None
 
     @classmethod
-    def set_current_measurement_set(cls, ms):
+    def save_current_measurement_set(cls, ms):
         cls._current_measurement_set = ms
 
     def __init__(self):
@@ -53,32 +88,27 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
             logging.warning(f"Problem opening TTY controller, continuing without it. Details: {e}")
 
     def process_buffer(self):
-        self.set_current_measurement_set(
+        self.save_current_measurement_set(
             self.parse_measurement_set(self.buffer.decode())
         )
+        
+        dict_to_dump = self._current_measurement_set.as_dict(key_style='tsv', include_timestamp=True)
+        current_log_file = LOGS_DIR / f'obs_conditions_{datetime.utcnow().strftime(r"%Y_%m_%d")}.tsv'
+        if not current_log_file.exists():
+            with open(current_log_file, 'w') as f:
+                f.write('\t'.join(dict_to_dump.keys()) + '\n')
+        with open(current_log_file, 'a') as f:
+            f.write('\t'.join(dict_to_dump.values()) + '\n')
 
     @classmethod
-    def current_measurements_as_dict(self, key_style: str = 'json') -> Dict[str, str]:
-        """"Current measurement formatted to dict.
-        
-        Keys are either measurement names (valid identifiers, JSON-friendly) or all-caps names with units
-        (FITS header-friendly).
+    def current_measurements_as_dict(self, key_style: str = 'json', include_timestamp: bool = False) -> Dict[str, str]:
+        """"Current measurement formatted to dict. See MeasurementSet.as_dict for details.
         
         If no current measurement is available (connection with controller is lost or it simply has not been done yet),
         empty dict is returned."""
         if self._current_measurement_set is None:
             return dict()
-        if key_style == 'json':
-            format_name = lambda measurement: measurement.name
-        elif key_style == 'fits':
-            format_name = lambda measurement: (
-                measurement.name.replace('_', '-').upper()
-                + '-'
-                + measurement.unit.encode('ascii', errors='ignore').decode().upper()
-            )
-        else:
-            raise ValueError(f"Unknown key_style {key_style}. Options are 'json' and 'fits'!")
-        return {format_name(m): m.value for m in self._current_measurement_set.measurements}
+        return self._current_measurement_set.as_dict(key_style, include_timestamp)
 
     @staticmethod
     def parse_measurement_set(line: str) -> MeasurementSet:
