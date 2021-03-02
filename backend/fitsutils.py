@@ -10,7 +10,7 @@ from typing import Dict, Any
 def normalize_frame(frame: NDArray, bits: int = 8) -> NDArray:
     frame = frame.astype(float)
     frame_min = frame.min()
-    frame_range = frame.max() - frame_min
+    frame_range = 1.01 * (frame.max() - frame_min)
     return ((2 ** bits) * (frame - frame_min) / frame_range).astype('int8')
 
 
