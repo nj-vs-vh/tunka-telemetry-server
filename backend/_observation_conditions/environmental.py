@@ -1,6 +1,8 @@
 import asyncio
 import serial_asyncio
 
+from datetime import datetime
+
 import re
 from dataclasses import dataclass
 from typing import List
@@ -19,18 +21,28 @@ class Measurement:
         return f"{self.name}, {self.unit} = {self.value}"
 
 
+@dataclass
+class MeasurementSet:
+    measurements: List[Measurement]
+    timestamp: datetime
+
+    def __str__(self) -> str:
+        return f"[{self.timestamp}] {'; '.join([str(m) for m in self.measurements])}"
+
+
 class MeasurementsReadingProtocol(asyncio.Protocol):
+    measurments_log = {}
+
     def __init__(self):
         super().__init__()
         self.buffer = bytes()
 
     def process_buffer(self):
-        measurements = self.parse_measurements(self.buffer.decode())
-        for m in measurements:
-            print(m)
+        ms = self.parse_measurement_set(self.buffer.decode())
+        print(ms)
 
     @staticmethod
-    def parse_measurements(line: str) -> List[Measurement]:
+    def parse_measurement_set(line: str) -> MeasurementSet:
         measurement_strs = [m.strip() for m in line.split(',')]
 
         measurement_names_mapping = {
@@ -59,7 +71,7 @@ class MeasurementsReadingProtocol(asyncio.Protocol):
             value = value_and_unit_split[0]
             unit = ''.join(value_and_unit_split[1:]) if len(value_and_unit_split) > 1 else 'logical'
             measurements.append(Measurement(name, value, unit))
-        return measurements
+        return MeasurementSet(measurements, timestamp=datetime.utcnow())
 
     # boilerplate from pyserial-asyncio
 
