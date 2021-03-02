@@ -52,14 +52,14 @@ class MeasurementSet:
             timestamp_key = 'ENVIRONMENTAL-OBS-CONDITIONS-TIMESTAMP'
         elif key_style == 'tsv':
             format_name = lambda measurement: (
-                measurement.name.replace('_', '-').title() + ', ' + measurement.unit
+                measurement.name.replace('_', ' ').capitalize() + ', ' + measurement.unit
             )
             timestamp_key = 'timestamp'
         else:
             raise ValueError(f"Unknown key_style {key_style}. Options are 'json', 'fits' or 'tsv'!")
         result = dict()
         if include_timestamp:
-            result[timestamp_key] = self.timestamp
+            result[timestamp_key] = str(self.timestamp)
         for m in self.measurements:
             result[format_name(m)] = m.value
         return result
@@ -158,7 +158,10 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
     def data_received(self, data):
         self.buffer += data
         if b'\n' in data:
-            self.process_buffer()
+            try:
+                self.process_buffer()
+            except Exception as e:
+                logging.warning(f"Error occurred while processing buffer from TTY controller. Details: {e}")
             self.buffer = bytes()
 
     def pause_writing(self):
