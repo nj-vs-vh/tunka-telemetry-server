@@ -50,6 +50,7 @@ Pygments==2.7.1
 pyparsing==2.4.7
 pyrsistent==0.17.3
 pyserial==3.5
+pyserial-asyncio==0.5
 python-dateutil==2.8.1
 python-dotenv==0.14.0
 pytz==2020.4

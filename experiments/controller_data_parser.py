@@ -46,11 +46,12 @@ def parse_measurements(line: str) -> List[Measurement]:
     return measurements
 
 
-controller_tty = '/dev/ttyACM0'
+if __name__ == "__main__":
+    controller_tty = '/dev/ttyACM0'
 
-with serial.Serial(controller_tty) as controller:
-    line = controller.readline()
-    line = line.decode()
-    measurements = parse_measurements(line)
-    for m in measurements:
-        print(m)
+    with serial.Serial(controller_tty) as controller:
+        line = controller.readline()
+        line = line.decode()
+        measurements = parse_measurements(line)
+        for m in measurements:
+            print(m)
