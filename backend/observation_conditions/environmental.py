@@ -54,9 +54,9 @@ class MeasurementSet:
                     'IS-ON': 'ON',
                     'ARDUINO': 'INO',
                     'EXTERNAL': 'EXT',
-                    'HUMIDITY-%': 'HUM'
+                    'HUMIDITY': 'HUM'
                 }.items():
-                    name.replace(patt, sub)
+                    name = name.replace(patt, sub)
                 return name
 
             format_name = format_name_for_fits
