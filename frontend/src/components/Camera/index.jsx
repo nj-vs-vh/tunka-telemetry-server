@@ -12,6 +12,9 @@ import RecordingOnIcon from '../../img/icons/rec-on.png'
 import RecordingOffIcon from '../../img/icons/rec-off.png'
 
 
+const OVERRIDE_PORT = undefined;
+
+
 export function CameraFeed() {
     const [metadata, setMetadata] = useState(null)
     const [imageUrl, setImageUrl] = useState(null)
@@ -19,7 +22,10 @@ export function CameraFeed() {
 
     useEffect(
         () => {
-            let ws = new WebSocket('ws://' + document.domain + ':8000/ws-camera-feed');
+            let host = OVERRIDE_PORT ? `${document.location.hostname}:${OVERRIDE_PORT}` : document.location.host
+            let wsUrl = `ws://${host}/ws-camera-feed`;
+            console.log(wsUrl);
+            let ws = new WebSocket(wsUrl);
             ws.onmessage = function (event) {
                 let data = event.data;
                 console.log(data);
