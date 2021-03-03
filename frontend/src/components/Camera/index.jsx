@@ -22,6 +22,7 @@ export function CameraFeed() {
             let ws = new WebSocket('ws://' + document.domain + ':8000/ws-camera-feed');
             ws.onmessage = function (event) {
                 let data = event.data;
+                console.log(data);
                 if (data instanceof Blob) {
                     setImageUrl(URL.createObjectURL(data));
                     setImageLoading(false);
@@ -44,7 +45,7 @@ export function CameraFeed() {
                 <div className="camera-feed-column">
                     <div className="camera-feed-container">
                         <img src={imageUrl} className="camera-feed-img" alt="ZWO ASI camera feed" />
-                    { imageLoading ? <div className="loader camera-feed-overlay">Loading...</div> : <div /> }
+                        { imageLoading ? <div className="loader camera-feed-overlay" /> : <div /> }
                     </div>
                     { metadata.gain ?
                         <span className="metadata-row">
