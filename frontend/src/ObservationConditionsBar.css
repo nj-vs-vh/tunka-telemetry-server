@@ -6,12 +6,7 @@
     height: 20px;
 }
 
-.bartext {
-    padding-right: 30px;
-}
-
-.baricon {
-    height: 70%;
-    object-fit: contain;
-    padding-right: 10px;
+.synced-s-ago-text {
+    padding-left: 30px;
+    color: rgb(100, 100, 100);
 }

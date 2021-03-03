@@ -3,7 +3,7 @@ import './App.css';
 import TaigaLogo from './img/TaigaLogo1Black.png'
 import Octocat from './img/GitHub-Mark-64px.png'
 
-import CameraFeed from './Camera'
+import CameraFeed from './components/Camera'
 import ObservationConditionsBar from './ObservationConditionsBar'
 
 function App() {

@@ -2,11 +2,13 @@ import os
 import asyncio
 from pathlib import Path
 
-from quart import Quart, Response
+
+from quart import Quart, websocket
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
 
 from pyindigo import logging
+from pyindigo.core import IndigoLogLevel, set_indigo_log_level
 
 from camera_adapter import CameraAdapter
 import camera_config
@@ -32,6 +34,10 @@ if indigo_debug_settings:
     }
     logging.pyindigoConfig(**indigo_debug_args)
 
+native_inidgo_log_level = os.environ.get("NATIVE_INDIGO_LOG_LEVEL", None)
+if native_inidgo_log_level:
+    set_indigo_log_level(IndigoLogLevel[native_inidgo_log_level])
+
 
 loop = asyncio.get_event_loop()
 
@@ -47,22 +53,14 @@ loop.create_task(camera_config.update_on_the_fly())
 app = Quart(__name__)
 
 
-@app.route('/api/camera-feed')
-async def camera_feed():
-    async def preview_feed():
-        async for image, _ in camera.preview_feed_generator():
-            yield b"--shot\r\n" + b"Content-Type: image/jpeg\r\n\r\n" + image + b"\r\n"
-    res = Response(preview_feed(), mimetype="multipart/x-mixed-replace; boundary=shot")
-    res.timeout = None
-    return res
-
-
-@app.route('/api/latest-camera-metadata')
-async def latest_camera_metadata():
-    if camera.preview_metadata is None:
-        return {"message": "No available metadata"}, 500
-    else:
-        return camera.preview_metadata
+@app.websocket('/ws-camera-feed')
+async def ws_camera_feed():
+    if camera.preview_metadata is not None:
+        await websocket.send_json(camera.preview_metadata)
+        await websocket.send(camera.preview)
+    async for image, metadata in camera.preview_feed_generator():
+        await websocket.send_json(metadata)
+        await websocket.send(image)
 
 
 @app.route('/api/observation-conditions')
@@ -84,4 +82,4 @@ try:
         )
 finally:
     loop.close()
-    logging.info("==================== CAMERA SERVER OFFLINE ====================")
+    logging.info("==================== CAMERA SERVER GOING OFFLINE ====================")
