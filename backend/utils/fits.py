@@ -11,7 +11,10 @@ def normalize_frame(frame: NDArray, bits: int = 8) -> NDArray:
     frame = frame.astype(float)
     frame_min = frame.min()
     frame_range = frame.max() - frame_min
-    return ((2 ** bits - 1) * (frame - frame_min) / frame_range).astype('int8')
+    if frame_range:
+        return ((2 ** bits - 1) * (frame - frame_min) / frame_range).astype('int8')
+    else:
+        return frame.astype('int8')
 
 
 def save_fits_as_jpeg(hdul: HDUList, filename: str):
