@@ -217,6 +217,7 @@ observation-conditions-logs
 *.jpeg
 *.jpg
 *.png
+*.log
 
 camconfig.yaml
 backend/.env
