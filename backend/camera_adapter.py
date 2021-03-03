@@ -22,7 +22,7 @@ from pyindigo.core.properties import (
 from pyindigo.core.properties.schemas import UserDefinedItem
 from pyindigo.core.enums import IndigoDriverAction, IndigoPropertyState
 
-import fitsutils
+import utils.fits as fitsutils
 from camera_config import camera_config, ShotType
 from observation_conditions.celestial import get_celestial_observation_conditions, localtime_str
 from observation_conditions.environmental import EnvironmentalConditionsReadingProtocol
@@ -36,7 +36,7 @@ driver = IndigoDriver("indigo_ccd_simulator")
 FITS_DIR = Path(__file__).parent.parent / "images"
 FITS_DIR.mkdir(exist_ok=True)
 
-DEBUG_LOCK = os.environ.get('DEBUG_CAMERA_LOCK', 'no') == 'yes'
+DEBUG_LOCK = os.environ.get("DEBUG_CAMERA_LOCK", "no") == "yes"
 
 
 class CameraAdapter:
@@ -82,7 +82,7 @@ class CameraAdapter:
         return await asyncio.gather(
             self._regularly_take_shots(ShotType.PREVIEW, self._preview_generation_callback),
             self._regularly_take_shots(
-                ShotType.SAVE_TO_DISK, self._fits_saving_callback, enabled=self.save_to_disk_enabled
+                ShotType.SAVE_TO_DISK, self._fits_saving_callback, enabled=self.is_astronomical_night_or_overridden
             ),
             # testing is usually turned off on server (enabled: False in config)
             self._regularly_take_shots(ShotType.TESTING, lambda *args: logging.debug("testing callback run")),
@@ -139,6 +139,7 @@ class CameraAdapter:
 
         if DEBUG_LOCK:
             import random
+
             pseudouid = random.randint(1, 100)
             logging.debug(f"waiting for camera lock (pseudo id={pseudouid})")
 
@@ -161,7 +162,7 @@ class CameraAdapter:
                 UserDefinedItem(
                     item_name="RAW 8 1x1" if color_mode == "greyscale" else "RGB 24 1x1",
                     item_value=True,
-                )
+                ),
             )
             self.device.set_property(CCDSpecificProperties.CCD_GAIN, GAIN=gain)
             time.sleep(0.1)  # safety sleep
@@ -183,6 +184,10 @@ class CameraAdapter:
             {
                 "shot_datetime": localtime_str(datetime.utcnow()),
                 "period": camera_config[ShotType.PREVIEW]["period"],
+                "save_to_disk": {
+                    "enabled": self.is_astronomical_night_or_overridden(camera_config[ShotType.SAVE_TO_DISK]),
+                    "period": camera_config[ShotType.SAVE_TO_DISK]["period"],
+                }
             }
         )
         self.new_preview_ready.set()
@@ -198,7 +203,7 @@ class CameraAdapter:
         file_path = str(FITS_DIR / self._generate_image_name("image", "fits"))
         logging.debug(f"saving FITS image to {file_path}...")
         environment = EnvironmentalConditionsReadingProtocol.current_measurements_as_dict(
-            key_style='fits', include_timestamp=False
+            key_style="fits", include_timestamp=False
         )
         for key, value in environment.items():
             try:
@@ -206,12 +211,12 @@ class CameraAdapter:
             except ValueError:
                 hdul[0].header[key] = value
                 logging.warning(
-                    f'Could not convert value {value} to float before writing it to FITS header, written as string'
+                    f"Could not convert value {value} to float before writing it to FITS header, written as string"
                 )
         hdul.writeto(file_path)
 
     @staticmethod
-    def save_to_disk_enabled(config_entry):
+    def is_astronomical_night_or_overridden(config_entry):
         if not config_entry or config_entry["enabled"] is False:
             return False
         if config_entry.get("override", False):
