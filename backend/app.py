@@ -53,7 +53,7 @@ loop.create_task(camera_config.update_on_the_fly())
 app = Quart(__name__)
 
 
-@app.websocket('/ws-camera-feed')
+@app.websocket('/ws/camera-feed')
 async def ws_camera_feed():
     if camera.preview_metadata is not None:
         await websocket.send_json(camera.preview_metadata)

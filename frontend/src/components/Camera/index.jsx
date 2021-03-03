@@ -23,7 +23,7 @@ export function CameraFeed() {
     useEffect(
         () => {
             let host = OVERRIDE_PORT ? `${document.location.hostname}:${OVERRIDE_PORT}` : document.location.host
-            let wsUrl = `ws://${host}/ws-camera-feed`;
+            let wsUrl = `ws://${host}/ws/camera-feed`;
             console.log(wsUrl);
             let ws = new WebSocket(wsUrl);
             ws.onmessage = function (event) {
