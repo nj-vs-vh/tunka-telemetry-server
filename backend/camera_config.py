@@ -26,7 +26,11 @@ class ShotType(Enum):
 
 def update_config(verbose: bool):
     with open(CONFIG_PATH, 'r') as f:
-        raw_new_config = yaml.safe_load(f)
+        try:
+            raw_new_config = yaml.safe_load(f)
+        except Exception:
+            logging.warning("Unable to parse camconfig.yaml file! Check syntax")
+            return
         new_config = dict()
         for raw_key, shot_type_config in raw_new_config.items():
             try:
