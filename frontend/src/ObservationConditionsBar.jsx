@@ -41,14 +41,14 @@ function ObservationConditionsBar(props) {
             </TextWithIcon>
             <TextWithIcon icon={SunIcon}>
                 {
-                    !obsCond.is_night ? 'Day' : (obsCond.is_astronomical_night ? 'Night (astronomical)' : 'Night')
+                    (!obsCond.is_night ? 'Day' : (obsCond.is_astronomical_night ? 'Night (astronomical)' : 'Night'))
                     + ', sun' + (obsCond.is_night ? 'rise' : 'set') + ' at '
                     + new Date(obsCond.is_night ? obsCond.sunrise.next : obsCond.sunset.next).toLocaleTimeString('ru-RU')
                 }
             </TextWithIcon>
             <TextWithIcon icon={MoonIcon}>
                 {
-                    obsCond.is_moonless ? 'Moonless' : 'Moonlit'
+                    (obsCond.is_moonless ? 'Moonless' : 'Moonlit')
                     + ', ' + (obsCond.is_moonless ? 'rises' : 'sets') + ' at '
                     + new Date(obsCond.is_moonless ? obsCond.moonrise.next : obsCond.moonset.next).toLocaleTimeString('ru-RU')
                 }
