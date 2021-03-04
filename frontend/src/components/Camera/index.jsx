@@ -24,11 +24,9 @@ export function CameraFeed() {
         () => {
             let host = OVERRIDE_PORT ? `${document.location.hostname}:${OVERRIDE_PORT}` : document.location.host
             let wsUrl = `ws://${host}/ws/camera-feed`;
-            console.log(wsUrl);
             let ws = new WebSocket(wsUrl);
             ws.onmessage = function (event) {
                 let data = event.data;
-                console.log(data);
                 if (data instanceof Blob) {
                     setImageUrl(URL.createObjectURL(data));
                     setImageLoading(false);
