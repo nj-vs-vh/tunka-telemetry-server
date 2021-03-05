@@ -2,23 +2,42 @@
 
 ## Работа с сервером
 
-* Директория камеры: `/home/vmn/camera-server/`
+### Конфигурация и данные
 
-* Конфигурация камеры: `/home/vmn/camera-server/camconfig.yaml`, инструкции внутри
+Корневая директория приложения камеры: `/home/vmn/camera-server/`
 
-* Конфигурация nginx (скорее всего трогать не придётся): `/etc/nginx/sites-enabled/camserver.nginx`
+Конфигурация камеры: `camconfig.yaml`, инструкции прямо внутри, изменения в файле подгружаются и применяются на лету, без перезапуска приложения.
 
-* Файл сервиса бэкенда (скорее всего трогать не придётся): `/etc/systemd/system/camserver-backend.service`
+Изображения сохраняются в `images`, данные телеметрии, читаемые с Arduino -- в `observation-conditions-logs`.
 
-* Манипуляции с сервисом бэкенда:
+### Запуск и логи
+
+Базовые команды для запуска/остановки/перезапуска приложения
 
 ```bash
 sudo systemctl status camserver-backend
 sudo systemctl start camserver-backend
 sudo systemctl stop camserver-backend
+sudo systemctl restart camserver-backend
 ```
 
-Сервис должен перезапускаться сам при рестарте машины, но это почему-то не всегда происходит, поэтому иногда может понадобится вручную делать `stop` - `start`
+Логи хранятся в нескольких местах:
+
+1. Логи приложения пишутся в `camserver.log`. Их уровень достаточно гибко настраивается в `backend/.env`. Можно логгировать работу асинхронного протокола камеры (`DEBUG_CAMERA_LOCK`) а также конфигурировать логи `pyindigo`.
+2. Нативные логи Indigo. Уровень конфигурируется там же в `backend/.env`, пишутся в stdout и доступны по командам
+
+```bash
+# последние 50 записей
+journalctl -u camserver-backend.service -n 50
+# следить в режиме реального времени, например при запуске сервера
+journalctl -u camserver-backend.service -f
+```
+
+Для самой подробной конфигурации работы сервера может понадобиться править
+
+* Конфигурацию nginx (статические файлы фронтенда): `/etc/nginx/sites-enabled/camserver.nginx`
+
+* Конфигруацию сервиса бэкенда: `/etc/systemd/system/camserver-backend.service`
 
 
 ## Установка и настройка
