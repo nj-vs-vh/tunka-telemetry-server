@@ -8,7 +8,7 @@ import './index.css';
 import './LoadingSpinner.css';
 
 
-const OVERRIDE_PORT = 8000;
+const OVERRIDE_PORT = undefined;
 
 
 export function CameraFeed() {
