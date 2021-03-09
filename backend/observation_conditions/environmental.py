@@ -106,10 +106,14 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
         dict_to_dump = self._current_measurement_set.as_dict(key_style='tsv', include_timestamp=True)
         current_log_file = LOGS_DIR / f'obs_conditions_{datetime.utcnow().strftime(r"%Y_%m_%d")}.tsv'
         if not current_log_file.exists():
+            self.currently_dumped_keys = list(dict_to_dump.keys())
             with open(current_log_file, 'w') as f:
-                f.write('\t'.join(dict_to_dump.keys()) + '\n')
+                f.write('\t'.join(self.currently_dumped_keys) + '\n')
         with open(current_log_file, 'a') as f:
-            f.write('\t'.join(dict_to_dump.values()) + '\n')
+            dict_to_dump_ordered_keys = dict.fromkeys(self.currently_dumped_keys, '')
+            for key, value in dict_to_dump.items():
+                dict_to_dump_ordered_keys[key] = value
+            f.write('\t'.join(dict_to_dump_ordered_keys.values()) + '\n')
 
     @classmethod
     def current_measurements_as_dict(self, key_style: str = 'json', include_timestamp: bool = False) -> Dict[str, str]:
@@ -139,16 +143,18 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
         measurements = []
         for measurement_str in measurement_strs:
             try:
-                name, value = measurement_str.split('=')
-            except ValueError:  # special case for 'Fan off'
-                try:
+                if '=' in  measurement_str:
+                    name, value = measurement_str.split('=')
+                elif measurement_str.startswith('Fan'):
                     name, value = measurement_str.split(' ')
                     value = '1' if value == 'on' else '0'
-                except Exception as e:
-                    logging.warning(
-                        f"Error while parsing measurement read from TTY controller '{measurement_str}': {e}"
-                    )
-                    continue
+                elif measurement_str.startswith('DHT21'):
+                    logging.info(measurement_str)
+            except Exception as e:
+                logging.warning(
+                    f"Error while parsing measurement read from TTY controller '{measurement_str}': {e}"
+                )
+                continue
 
             name = measurement_names_mapping.get(name, name)
             value_and_unit_split = re.split(r'([^\-\.0-9])', value.strip(), maxsplit=1)
