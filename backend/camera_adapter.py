@@ -24,7 +24,7 @@ from pyindigo.core.enums import IndigoDriverAction, IndigoPropertyState
 
 import utils.fits as fitsutils
 from camera_config import camera_config, ShotType
-from observation_conditions.celestial import get_celestial_observation_conditions, localtime_str
+from observation_conditions.celestial import all_conditions, localtime_str
 from observation_conditions.environmental import EnvironmentalConditionsReadingProtocol
 
 
@@ -82,7 +82,7 @@ class CameraAdapter:
         return await asyncio.gather(
             self._regularly_take_shots(ShotType.PREVIEW, self._preview_generation_callback),
             self._regularly_take_shots(
-                ShotType.SAVE_TO_DISK, self._fits_saving_callback, enabled=self.is_astronomical_night_or_overridden
+                ShotType.SAVE_TO_DISK, self._fits_saving_callback, enabled=self._saving_fits_is_enabled
             ),
             # testing is usually turned off on server (enabled: False in config)
             self._regularly_take_shots(ShotType.TESTING, lambda *args: logging.debug("testing callback run")),
@@ -185,9 +185,9 @@ class CameraAdapter:
                 "shot_datetime": localtime_str(datetime.utcnow()),
                 "period": camera_config[ShotType.PREVIEW]["period"],
                 "save_to_disk": {
-                    "enabled": self.is_astronomical_night_or_overridden(camera_config[ShotType.SAVE_TO_DISK]),
+                    "enabled": self._saving_fits_is_enabled(),
                     "period": camera_config[ShotType.SAVE_TO_DISK]["period"],
-                }
+                },
             }
         )
         self.new_preview_ready.set()
@@ -216,13 +216,9 @@ class CameraAdapter:
         hdul.writeto(file_path)
 
     @staticmethod
-    def is_astronomical_night_or_overridden(config_entry):
-        if not config_entry or config_entry["enabled"] is False:
-            return False
-        if config_entry.get("override", False):
-            return True
-        conditions = get_celestial_observation_conditions()
-        return conditions["is_astronomical_night"] and conditions["is_moonless"]
+    def _saving_fits_is_enabled():
+        config_entry = camera_config.get(ShotType.SAVE_TO_DISK, None)
+        return config_is_overriden(config_entry) or all_conditions("is_astronomical_night", "is_moonless")
 
     @staticmethod
     def _generate_image_name(prefix: str, format_: str) -> str:
@@ -230,9 +226,17 @@ class CameraAdapter:
         return f'{prefix}_{datetime.utcnow().strftime(r"%Y_%m_%d_%H_%M_%S")}.{format_}'
 
 
+# TODO: model config entry as a class and make it a method
+def config_is_overriden(config_entry):
+    if not config_entry or config_entry["enabled"] is False:
+        return False
+    if config_entry.get("override", False):
+        return True
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    logging.pyindigoConfig(log_device_connection=True, lop_callback_exceptions=True)
+    logging.pyindigoConfig(log_device_connection=True, log_callback_exceptions=True)
 
     loop = asyncio.get_event_loop()
     camera_adapter = CameraAdapter(mode="Simulator", loop=loop)

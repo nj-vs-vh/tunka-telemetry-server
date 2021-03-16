@@ -64,6 +64,11 @@ def get_celestial_observation_conditions() -> Dict[str, Any]:
     }
 
 
+def all_conditions(*condition_names) -> bool:
+    conditions = get_celestial_observation_conditions()
+    return all(conditions.get(name, False) for name in condition_names)
+
+
 if __name__ == "__main__":
     from time import sleep
 
