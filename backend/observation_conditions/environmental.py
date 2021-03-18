@@ -109,6 +109,10 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
             self.currently_dumped_keys = list(dict_to_dump.keys())
             with open(current_log_file, 'w') as f:
                 f.write('\t'.join(self.currently_dumped_keys) + '\n')
+        elif not hasattr(self, 'currently_dumped_keys'):  # continue writing to file...
+            with open(current_log_file, 'r') as f:
+                line = f.readline()
+                self.currently_dumped_keys = line.strip().split('\t')
         with open(current_log_file, 'a') as f:
             dict_to_dump_ordered_keys = dict.fromkeys(self.currently_dumped_keys, '')
             for key, value in dict_to_dump.items():
