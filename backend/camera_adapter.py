@@ -185,7 +185,7 @@ class CameraAdapter:
                 "shot_datetime": localtime_str(datetime.utcnow()),
                 "period": camera_config[ShotType.PREVIEW]["period"],
                 "save_to_disk": {
-                    "enabled": self._saving_fits_is_enabled(),
+                    "enabled": self._saving_fits_is_enabled(camera_config[ShotType.SAVE_TO_DISK]),
                     "period": camera_config[ShotType.SAVE_TO_DISK]["period"],
                 },
             }
