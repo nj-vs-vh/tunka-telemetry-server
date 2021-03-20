@@ -216,8 +216,7 @@ class CameraAdapter:
         hdul.writeto(file_path)
 
     @staticmethod
-    def _saving_fits_is_enabled():
-        config_entry = camera_config.get(ShotType.SAVE_TO_DISK, None)
+    def _saving_fits_is_enabled(config_entry):
         return config_is_overriden(config_entry) or all_conditions("is_astronomical_night", "is_moonless")
 
     @staticmethod
