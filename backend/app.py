@@ -2,7 +2,6 @@ import os
 import asyncio
 from pathlib import Path
 
-
 from quart import Quart, websocket
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
@@ -17,11 +16,15 @@ from observation_conditions import get_observation_conditions, EnvironmentalCond
 import read_dotenv  # noqa
 
 
+CUR_DIR = Path(__file__).parent
+
+
+# logging setup
 # see https://docs.python.org/3/library/logging.html#logging.basicConfig
 logging_config = {'format': r'[%(asctime)s] %(levelname)s: %(message)s', 'datefmt': r'%x %X'}
 log_filename = os.environ.get("LOG_FILENAME", None)
 if log_filename:
-    logging_config['filename'] = str((Path(__file__).parent.parent / log_filename).resolve())
+    logging_config['filename'] = str((CUR_DIR.parent / log_filename).resolve())
 log_level = os.environ.get("LOG_LEVEL", None)
 if log_level:
     logging_config['level'] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
@@ -39,18 +42,20 @@ if native_inidgo_log_level:
     set_indigo_log_level(IndigoLogLevel[native_inidgo_log_level])
 
 
+# loop setup, non-Quart tasks startup
 loop = asyncio.get_event_loop()
-
 if os.environ.get('READ_FROM_TTY_CONTROLLER', None) == 'yes':
     EnvironmentalConditionsReadingProtocol.activate(loop)
-
 camera = CameraAdapter(mode=os.environ.get('CAMERA_MODE', None), loop=loop)
 loop.create_task(camera.operate())
-
 loop.create_task(camera_config.update_on_the_fly())
 
 
-app = Quart(__name__)
+# Quart web app setup
+FRONTENT_BUILD = CUR_DIR / "../frontend/build"
+STATIC_DIR = FRONTENT_BUILD.resolve()
+
+app = Quart(__name__, static_folder=str(STATIC_DIR), static_url_path="/")
 
 
 @app.websocket('/ws/camera-feed')
@@ -67,6 +72,18 @@ async def ws_camera_feed():
 async def obs_conditions():
     return get_observation_conditions()
 
+
+@app.route("/", methods=['GET'])
+async def index():
+    return await app.send_static_file("index.html")
+
+
+@app.route("/<path>", methods=['GET'])
+async def static_file(path: str):
+    return await app.send_static_file(path)
+
+
+# serving Quart app
 
 serve_with = os.environ.get('SERVE_WITH', None)
 

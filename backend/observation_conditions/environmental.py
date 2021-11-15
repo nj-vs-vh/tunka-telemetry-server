@@ -15,6 +15,7 @@ from pyindigo import logging
 CONTROLLER_TTY = "/dev/ttyACM0"
 
 LOGS_DIR = Path(__file__).parent.parent.parent / "observation-conditions-logs"
+LOGS_DIR.mkdir(exist_ok=True)
 
 
 @dataclass
@@ -202,7 +203,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     EnvironmentalConditionsReadingProtocol.activate(loop)
     try:
-        loop.run_until_complete(dummy())
+        loop.run_until_complete(dummy_action())
     finally:
         loop.close()
         print('done!')
