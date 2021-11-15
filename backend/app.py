@@ -3,8 +3,6 @@ import asyncio
 from pathlib import Path
 
 from quart import Quart, websocket
-from hypercorn.asyncio import serve
-from hypercorn.config import Config
 
 from pyindigo import logging
 from pyindigo.core import IndigoLogLevel, set_indigo_log_level
@@ -87,7 +85,7 @@ serve_with = os.environ.get("SERVE_WITH", None)
 
 try:
     if serve_with == "Hypercorn":
-        loop.run_until_complete(serve(app, Config()))
+        pass
     elif serve_with == "Quart_run":
         app.run(debug=False, use_reloader=False, loop=loop, port=8000)
         loop.run_forever()
