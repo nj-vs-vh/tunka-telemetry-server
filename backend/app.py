@@ -3,6 +3,8 @@ import asyncio
 from pathlib import Path
 
 from quart import Quart, websocket
+from hypercorn.asyncio import serve
+from hypercorn.config import Config
 
 from pyindigo import logging
 from pyindigo.core import IndigoLogLevel, set_indigo_log_level
@@ -15,17 +17,15 @@ import read_dotenv  # noqa
 
 
 CUR_DIR = Path(__file__).parent
-
+ROOT_DIR = CUR_DIR.parent
+SERVER_LOG = ROOT_DIR / "server.log"
+CAMERA_LOG = ROOT_DIR / "camera.log"
 
 # logging setup
 # see https://docs.python.org/3/library/logging.html#logging.basicConfig
-logging_config = {"format": r"[%(asctime)s] %(levelname)s: %(message)s", "datefmt": r"%x %X"}
-log_filename = os.environ.get("LOG_FILENAME", None)
-if log_filename:
-    logging_config["filename"] = str((CUR_DIR.parent / log_filename).resolve())
-log_level = os.environ.get("LOG_LEVEL", None)
-if log_level:
-    logging_config["level"] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
+logging_config = {"format": r"[%(asctime)s] %(levelname)s: %(message)s", "datefmt": r"%x %X", "filename": CAMERA_LOG}
+log_level = os.environ.get("LOG_LEVEL", "INFO")
+logging_config["level"] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
 logging.basicConfig(**logging_config)
 
 indigo_debug_settings = os.environ.get("INDIGO_DEBUG", None)
@@ -83,16 +83,21 @@ async def static_file(path: str):
 
 serve_with = os.environ.get("SERVE_WITH", None)
 
-if serve_with == "Hypercorn":
-    pass
-elif serve_with == "Quart_run":
-    try:
-        app.run(debug=False, use_reloader=False, loop=loop, port=8000)
+try:
+    PORT = int(os.environ.get("PORT", 8000))
+    if serve_with == "Hypercorn":
+        config = Config()
+        config.bind = f'0.0.0.0:{PORT}'
+        config.workers = 1
+        config.errorlog = str(SERVER_LOG.resolve())
+        loop.run_until_complete(serve(app, config))
+    elif serve_with == "Quart_run":
+        app.run(debug=False, use_reloader=False, loop=loop, port=PORT)
         loop.run_forever()
-    finally:
-        loop.close()
-        logging.info("==================== CAMERA SERVER GOING OFFLINE ====================")
-else:
-    raise OSError(
-        "SERVE_WITH environment variable must be set to 'Hypercorn' or 'Quart_run' (preferably in .quartenv file)"
-    )
+    else:
+        raise OSError(
+            "SERVE_WITH environment variable must be set to 'Hypercorn' or 'Quart_run' (preferably in .env file)"
+        )
+finally:
+    loop.close()
+    logging.info("==================== CAMERA SERVER GOING OFFLINE ====================")
