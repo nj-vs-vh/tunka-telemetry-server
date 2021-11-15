@@ -12,9 +12,9 @@ def normalize_frame(frame: NDArray, bits: int = 8) -> NDArray:
     frame_min = frame.min()
     frame_range = frame.max() - frame_min
     if frame_range:
-        return ((2 ** bits - 1) * (frame - frame_min) / frame_range).astype('int8')
+        return ((2 ** bits - 1) * (frame - frame_min) / frame_range).astype("int8")
     else:
-        return frame.astype('int8')
+        return frame.astype("int8")
 
 
 def save_fits_as_jpeg(hdul: HDUList, filename: str):
@@ -22,18 +22,18 @@ def save_fits_as_jpeg(hdul: HDUList, filename: str):
     if image_data.ndim == 3:
         image_data = np.transpose(image_data, (1, 2, 0))
         image_data = normalize_frame(image_data)
-        image = Image.fromarray(image_data, 'RGB')
+        image = Image.fromarray(image_data, "RGB")
     elif image_data.ndim == 2:
         image_data = normalize_frame(image_data)
-        image = Image.fromarray(image_data, 'L')
-    image.save(filename, format='jpeg')
+        image = Image.fromarray(image_data, "L")
+    image.save(filename, format="jpeg")
 
 
 fits_fields_to_metadata_fields = {
-    'EXPTIME': 'exposure',
-    'CCD-TEMP': 'device_temperature',
-    'GAIN': 'gain',
-    'DATE-OBS': 'device_time'
+    "EXPTIME": "exposure",
+    "CCD-TEMP": "device_temperature",
+    "GAIN": "gain",
+    "DATE-OBS": "device_time",
 }
 
 
@@ -41,7 +41,7 @@ def extract_metadata(hdul: HDUList) -> Dict[str, Any]:
     fits_header_dict = {k: v for k, v in hdul[0].header.items()}
     metadata = dict()
     for fits_key, meta_key in fits_fields_to_metadata_fields.items():
-        metadata[meta_key] = fits_header_dict.get(fits_key, 'NOT SET')
+        metadata[meta_key] = fits_header_dict.get(fits_key, "NOT SET")
     return metadata
 
 

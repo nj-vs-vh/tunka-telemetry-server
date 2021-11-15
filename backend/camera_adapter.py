@@ -37,6 +37,7 @@ FITS_DIR = Path(__file__).parent.parent / "images"
 FITS_DIR.mkdir(exist_ok=True)
 
 DEBUG_LOCK = os.environ.get("DEBUG_CAMERA_LOCK", "no") == "yes"
+CAMERA_DEVICE_NAME = os.environ.get("CAMERA_DEVICE_NAME", "ZWO ASI120MC-S #0")
 
 
 class CameraAdapter:
@@ -55,7 +56,7 @@ class CameraAdapter:
             device_name = "CCD Imager Simulator"
         elif mode == "Real":
             driver_name = "indigo_ccd_asi"
-            device_name = "ZWO ASI120MC-S #0"
+            device_name = CAMERA_DEVICE_NAME
         else:
             raise ValueError(f"mode must be 'Real' or 'Simulator' (preferably set in .env file), but {mode} received")
 

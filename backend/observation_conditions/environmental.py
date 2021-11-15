@@ -33,40 +33,41 @@ class MeasurementSet:
     measurements: List[Measurement]
     timestamp: datetime
 
-    def as_dict(self, key_style: str = 'json', include_timestamp: bool = False) -> Dict[str, str]:
-        """"Set of measurements formatted as dict.
-        
+    def as_dict(self, key_style: str = "json", include_timestamp: bool = False) -> Dict[str, str]:
+        """ "Set of measurements formatted as dict.
+
         Keys can be formatted as
             (1) valid identifiers, to use as JSON key
             (2) all-caps names with units integrated, to use in FITS headers
             (3) Human-readable, to use in tsv header
         """
-        if key_style == 'json':
-            format_name = lambda measurement: measurement.name
-            timestamp_key = 'environmental_obs_conditions_timestamp_utc'
-        elif key_style == 'fits':
+        if key_style == "json":
+            format_name = lambda measurement: measurement.name  # noqa
+            timestamp_key = "environmental_obs_conditions_timestamp_utc"
+        elif key_style == "fits":
+
             def format_name_for_fits(measurement: Measurement) -> str:
-                name = measurement.name.replace('_', '-').upper()
+                name = measurement.name.replace("_", "-").upper()
                 for patt, sub in {  # name shortening is applied here
-                    'WINDOW': 'WND',
-                    'TEMPERATURE': 'T',
-                    'HEATING-POWER': 'POW',
-                    'CAMERA': 'CAM',
-                    'IS-ON': 'ON',
-                    'ARDUINO': 'INO',
-                    'EXTERNAL': 'EXT',
-                    'HUMIDITY': 'HUM'
+                    "WINDOW": "WND",
+                    "TEMPERATURE": "T",
+                    "HEATING-POWER": "POW",
+                    "CAMERA": "CAM",
+                    "IS-ON": "ON",
+                    "ARDUINO": "INO",
+                    "EXTERNAL": "EXT",
+                    "HUMIDITY": "HUM",
                 }.items():
                     name = name.replace(patt, sub)
                 return name
 
             format_name = format_name_for_fits
-            timestamp_key = 'OBS-UTC'
-        elif key_style == 'tsv':
-            format_name = lambda measurement: (
-                measurement.name.replace('_', ' ').capitalize() + ', ' + measurement.unit
+            timestamp_key = "OBS-UTC"
+        elif key_style == "tsv":
+            format_name = lambda measurement: (  # noqa
+                measurement.name.replace("_", " ").capitalize() + ", " + measurement.unit
             )
-            timestamp_key = 'timestamp'
+            timestamp_key = "timestamp"
         else:
             raise ValueError(f"Unknown key_style {key_style}. Options are 'json', 'fits' or 'tsv'!")
         result = dict()
@@ -100,30 +101,28 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
             logging.warning(f"Problem opening TTY controller, continuing without it. Details: {e}")
 
     def process_buffer(self):
-        self.save_current_measurement_set(
-            self.parse_measurement_set(self.buffer.decode())
-        )
-        
-        dict_to_dump = self._current_measurement_set.as_dict(key_style='tsv', include_timestamp=True)
+        self.save_current_measurement_set(self.parse_measurement_set(self.buffer.decode()))
+
+        dict_to_dump = self._current_measurement_set.as_dict(key_style="tsv", include_timestamp=True)
         current_log_file = LOGS_DIR / f'obs_conditions_{datetime.utcnow().strftime(r"%Y_%m_%d")}.tsv'
         if not current_log_file.exists():
             self.currently_dumped_keys = list(dict_to_dump.keys())
-            with open(current_log_file, 'w') as f:
-                f.write('\t'.join(self.currently_dumped_keys) + '\n')
-        elif not hasattr(self, 'currently_dumped_keys'):  # continue writing to file...
-            with open(current_log_file, 'r') as f:
+            with open(current_log_file, "w") as f:
+                f.write("\t".join(self.currently_dumped_keys) + "\n")
+        elif not hasattr(self, "currently_dumped_keys"):  # continue writing to file...
+            with open(current_log_file, "r") as f:
                 line = f.readline()
-                self.currently_dumped_keys = line.strip().split('\t')
-        with open(current_log_file, 'a') as f:
-            dict_to_dump_ordered_keys = dict.fromkeys(self.currently_dumped_keys, '')
+                self.currently_dumped_keys = line.strip().split("\t")
+        with open(current_log_file, "a") as f:
+            dict_to_dump_ordered_keys = dict.fromkeys(self.currently_dumped_keys, "")
             for key, value in dict_to_dump.items():
                 dict_to_dump_ordered_keys[key] = value
-            f.write('\t'.join(dict_to_dump_ordered_keys.values()) + '\n')
+            f.write("\t".join(dict_to_dump_ordered_keys.values()) + "\n")
 
     @classmethod
-    def current_measurements_as_dict(self, key_style: str = 'json', include_timestamp: bool = False) -> Dict[str, str]:
-        """"Current measurement formatted to dict. See MeasurementSet.as_dict for details.
-        
+    def current_measurements_as_dict(self, key_style: str = "json", include_timestamp: bool = False) -> Dict[str, str]:
+        """ "Current measurement formatted to dict. See MeasurementSet.as_dict for details.
+
         If no current measurement is available (connection with controller is lost or it simply has not been done yet),
         empty dict is returned."""
         if self._current_measurement_set is None:
@@ -132,39 +131,37 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
 
     @staticmethod
     def parse_measurement_set(line: str) -> MeasurementSet:
-        measurement_strs = [m.strip() for m in line.split(',')]
+        measurement_strs = [m.strip() for m in line.split(",")]
 
         measurement_names_mapping = {
-            'Window T': 'window_temperature',
-            'Win.heat. P': 'window_heating_power',
-            'Camera T': 'camera_temperature',
-            'Cam.heat. P': 'camera_heating_power',
-            'Fan': 'fan_is_on',
-            'Arduino T': 'arduino_temperature',
-            'Ext. T': 'external_temperature',
-            'Hum.': 'external_humidity',
+            "Window T": "window_temperature",
+            "Win.heat. P": "window_heating_power",
+            "Camera T": "camera_temperature",
+            "Cam.heat. P": "camera_heating_power",
+            "Fan": "fan_is_on",
+            "Arduino T": "arduino_temperature",
+            "Ext. T": "external_temperature",
+            "Hum.": "external_humidity",
         }
 
         measurements = []
         for measurement_str in measurement_strs:
             try:
-                if '=' in  measurement_str:
-                    name, value = measurement_str.split('=')
-                elif measurement_str.startswith('Fan'):
-                    name, value = measurement_str.split(' ')
-                    value = '1' if value == 'on' else '0'
-                elif measurement_str.startswith('DHT21'):
+                if "=" in measurement_str:
+                    name, value = measurement_str.split("=")
+                elif measurement_str.startswith("Fan"):
+                    name, value = measurement_str.split(" ")
+                    value = "1" if value == "on" else "0"
+                elif measurement_str.startswith("DHT21"):
                     logging.info(measurement_str)
             except Exception as e:
-                logging.warning(
-                    f"Error while parsing measurement read from TTY controller '{measurement_str}': {e}"
-                )
+                logging.warning(f"Error while parsing measurement read from TTY controller '{measurement_str}': {e}")
                 continue
 
             name = measurement_names_mapping.get(name, name)
-            value_and_unit_split = re.split(r'([^\-\.0-9])', value.strip(), maxsplit=1)
+            value_and_unit_split = re.split(r"([^\-\.0-9])", value.strip(), maxsplit=1)
             value = value_and_unit_split[0]
-            unit = ''.join(value_and_unit_split[1:]) if len(value_and_unit_split) > 1 else 'logical'
+            unit = "".join(value_and_unit_split[1:]) if len(value_and_unit_split) > 1 else "logical"
             measurements.append(Measurement(name, value, unit))
         return MeasurementSet(measurements, timestamp=datetime.utcnow())
 
@@ -179,7 +176,7 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
 
     def data_received(self, data):
         self.buffer += data
-        if b'\n' in data:
+        if b"\n" in data:
             try:
                 self.process_buffer()
             except Exception as e:
@@ -197,7 +194,7 @@ if __name__ == "__main__":
 
     async def dummy_action():
         while True:
-            print('...')
+            print("...")
             await asyncio.sleep(2)
 
     loop = asyncio.get_event_loop()
@@ -206,4 +203,4 @@ if __name__ == "__main__":
         loop.run_until_complete(dummy_action())
     finally:
         loop.close()
-        print('done!')
+        print("done!")

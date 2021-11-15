@@ -8,7 +8,7 @@ from watchgod import awatch
 from dictdiffer import diff
 
 
-CONFIG_PATH = Path(__file__).parent / '../camconfig.yaml'
+CONFIG_PATH = Path(__file__).parent / "../camconfig.yaml"
 
 camera_config = dict()
 
@@ -16,16 +16,16 @@ camera_config = dict()
 class ShotType(Enum):
     """Keys from camconfig.yaml"""
 
-    PREVIEW = 'preview'
-    SAVE_TO_DISK = 'savetodisk'
-    TESTING = 'testing'
+    PREVIEW = "preview"
+    SAVE_TO_DISK = "savetodisk"
+    TESTING = "testing"
 
     def __str__(self):
         return self.value
 
 
 def update_config(verbose: bool):
-    with open(CONFIG_PATH, 'r') as f:
+    with open(CONFIG_PATH, "r") as f:
         try:
             raw_new_config = yaml.safe_load(f)
         except Exception:
@@ -44,14 +44,14 @@ def update_config(verbose: bool):
     if verbose:
         config_diff = diff(camera_config, new_config)
         try:
-            change_str = ''
+            change_str = ""
             for change in config_diff:
                 change_str += (
                     f'\t\t{".".join(str(field) for field in change[1])}: "{change[2][0]}" => "{change[2][1]}"\n'
                 )
         except Exception:
-            change_str = '\t\tSorry, unable to display diff'
-        logging.info('config file updated:\n' + change_str)
+            change_str = "\t\tSorry, unable to display diff"
+        logging.info("config file updated:\n" + change_str)
 
     camera_config.update(new_config)
 

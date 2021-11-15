@@ -21,20 +21,18 @@ CUR_DIR = Path(__file__).parent
 
 # logging setup
 # see https://docs.python.org/3/library/logging.html#logging.basicConfig
-logging_config = {'format': r'[%(asctime)s] %(levelname)s: %(message)s', 'datefmt': r'%x %X'}
+logging_config = {"format": r"[%(asctime)s] %(levelname)s: %(message)s", "datefmt": r"%x %X"}
 log_filename = os.environ.get("LOG_FILENAME", None)
 if log_filename:
-    logging_config['filename'] = str((CUR_DIR.parent / log_filename).resolve())
+    logging_config["filename"] = str((CUR_DIR.parent / log_filename).resolve())
 log_level = os.environ.get("LOG_LEVEL", None)
 if log_level:
-    logging_config['level'] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
+    logging_config["level"] = getattr(logging, log_level)  # log_level.DEBUG, log_level.INFO, etc
 logging.basicConfig(**logging_config)
 
 indigo_debug_settings = os.environ.get("INDIGO_DEBUG", None)
 if indigo_debug_settings:
-    indigo_debug_args = {
-        f'log_{setting.strip().lower()}': True for setting in indigo_debug_settings.split(',')
-    }
+    indigo_debug_args = {f"log_{setting.strip().lower()}": True for setting in indigo_debug_settings.split(",")}
     logging.pyindigoConfig(**indigo_debug_args)
 
 native_inidgo_log_level = os.environ.get("NATIVE_INDIGO_LOG_LEVEL", None)
@@ -44,9 +42,9 @@ if native_inidgo_log_level:
 
 # loop setup, non-Quart tasks startup
 loop = asyncio.get_event_loop()
-if os.environ.get('READ_FROM_TTY_CONTROLLER', None) == 'yes':
+if os.environ.get("READ_FROM_TTY_CONTROLLER", None) == "yes":
     EnvironmentalConditionsReadingProtocol.activate(loop)
-camera = CameraAdapter(mode=os.environ.get('CAMERA_MODE', None), loop=loop)
+camera = CameraAdapter(mode=os.environ.get("CAMERA_MODE", None), loop=loop)
 loop.create_task(camera.operate())
 loop.create_task(camera_config.update_on_the_fly())
 
@@ -58,7 +56,7 @@ STATIC_DIR = FRONTENT_BUILD.resolve()
 app = Quart(__name__, static_folder=str(STATIC_DIR), static_url_path="/")
 
 
-@app.websocket('/ws/camera-feed')
+@app.websocket("/ws/camera-feed")
 async def ws_camera_feed():
     if camera.preview_metadata is not None:
         await websocket.send_json(camera.preview_metadata)
@@ -68,29 +66,29 @@ async def ws_camera_feed():
         await websocket.send(image)
 
 
-@app.route('/api/observation-conditions')
+@app.route("/api/observation-conditions")
 async def obs_conditions():
     return get_observation_conditions()
 
 
-@app.route("/", methods=['GET'])
+@app.route("/", methods=["GET"])
 async def index():
     return await app.send_static_file("index.html")
 
 
-@app.route("/<path>", methods=['GET'])
+@app.route("/<path>", methods=["GET"])
 async def static_file(path: str):
     return await app.send_static_file(path)
 
 
 # serving Quart app
 
-serve_with = os.environ.get('SERVE_WITH', None)
+serve_with = os.environ.get("SERVE_WITH", None)
 
 try:
-    if serve_with == 'Hypercorn':
+    if serve_with == "Hypercorn":
         loop.run_until_complete(serve(app, Config()))
-    elif serve_with == 'Quart_run':
+    elif serve_with == "Quart_run":
         app.run(debug=False, use_reloader=False, loop=loop, port=8000)
         loop.run_forever()
     else:
