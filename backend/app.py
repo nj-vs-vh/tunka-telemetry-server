@@ -83,16 +83,16 @@ async def static_file(path: str):
 
 serve_with = os.environ.get("SERVE_WITH", None)
 
-try:
-    if serve_with == "Hypercorn":
-        pass
-    elif serve_with == "Quart_run":
+if serve_with == "Hypercorn":
+    pass
+elif serve_with == "Quart_run":
+    try:
         app.run(debug=False, use_reloader=False, loop=loop, port=8000)
         loop.run_forever()
-    else:
-        raise OSError(
-            "SERVE_WITH environment variable must be set to 'Hypercorn' or 'Quart_run' (preferably in .quartenv file)"
-        )
-finally:
-    loop.close()
-    logging.info("==================== CAMERA SERVER GOING OFFLINE ====================")
+    finally:
+        loop.close()
+        logging.info("==================== CAMERA SERVER GOING OFFLINE ====================")
+else:
+    raise OSError(
+        "SERVE_WITH environment variable must be set to 'Hypercorn' or 'Quart_run' (preferably in .quartenv file)"
+    )
