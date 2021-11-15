@@ -2,41 +2,45 @@
 
 ## Работа с сервером
 
-### Конфигурация и данные
+Корневая директория приложения: `/home/vmn/tunka-telemetry-server/`
+Скрипт для запуска вручную: `/home/vmn/run_camserver_backend/`
 
-Корневая директория приложения камеры: `/home/vmn/camera-server/`
+### Конфигурационные файлы
 
-Конфигурация камеры: `camconfig.yaml`, инструкции прямо внутри, изменения в файле подгружаются и применяются на лету, без перезапуска приложения.
+Конфигурация камеры: `camconfig.yaml`. Пояснения для полей можно найти в [примере](camconfig.yaml.example).
+Изменения в этом файле подгружаются и применяются **без перезапуска приложения**.
 
-Изображения сохраняются в `images`, данные телеметрии, читаемые с Arduino -- в `observation-conditions-logs`.
+Конфигурация сервера: `backend/.env`. Пример с пояснениями можно найти [здесь](backend/.env.example).
 
-### Запуск и логи
+### Данные
 
-Базовые команды для запуска/остановки/перезапуска приложения
+В директорию `images` пишутся снимки неба, соответствующие сценарию `save_to_disk` в `camconfig.yaml`. Данные телеметрии, читаемые с Arduino, в формате tsv пишутся в `observation-conditions-logs` (и также добавляются в виде заголовков в `.fits` файлы).
+
+### Запуск и мониторинг
+
+Приложение работает в `systemd`-сервисе:
 
 ```bash
-sudo systemctl status camserver-backend
-sudo systemctl start camserver-backend
-sudo systemctl stop camserver-backend
-sudo systemctl restart camserver-backend
+sudo systemctl status camserver
+sudo systemctl start camserver
+sudo systemctl stop camserver
+sudo systemctl restart camserver
 ```
+
+Конфигурация сервиса: `/etc/systemd/system/camserver.service`
+
+### Логи
 
 Логи хранятся в нескольких местах:
 
-1. Логи приложения пишутся в `camserver.log`. Их уровень достаточно гибко настраивается в `backend/.env`. Можно логгировать работу асинхронного протокола камеры (`DEBUG_CAMERA_LOCK`) а также конфигурировать логи `pyindigo`.
-2. Нативные логи Indigo. Уровень конфигурируется там же в `backend/.env`, пишутся в stdout и доступны по командам
+1. `backend/camera.log` - основной лог приложения. Уровень логгирования различных модулей настраивается в `.env`-файле
+2. `backend/server.log` - лог ошибок сервера
+3. Лог сервиса:
 
-```bash
-# последние 50 записей
-journalctl -u camserver-backend.service -n 50
-# следить в режиме реального времени, например при запуске сервера
-journalctl -u camserver-backend.service -f
-```
-
-Для самой подробной конфигурации работы сервера может понадобиться править
-
-* Конфигруацию сервиса бэкенда: `/etc/systemd/system/camserver-backend.service`
-
+    ```bash
+    sudo journalctl -u camserver-backend.service -n 50  # последние 50 записей
+    sudo journalctl -u camserver-backend.service -f  # следить в режиме реального времени, например при запуске сервера
+    ```
 
 ## Установка и настройка
 
