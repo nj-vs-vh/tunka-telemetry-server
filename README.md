@@ -3,7 +3,7 @@
 ## Работа с сервером
 
 Корневая директория приложения: `/home/vmn/tunka-telemetry-server/`
-Скрипт для запуска вручную: `/home/vmn/run_camserver_backend/`
+Скрипт для запуска вручную: `/home/vmn/run_camserver_backend.sh`. Требуется запускать из-под root.
 
 ### Конфигурационные файлы
 
