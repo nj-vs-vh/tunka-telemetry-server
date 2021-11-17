@@ -1,6 +1,7 @@
 import os
 import asyncio
 from pathlib import Path
+from datetime import datetime
 
 from quart import Quart, websocket
 from hypercorn.asyncio import serve
@@ -16,10 +17,16 @@ from observation_conditions import get_observation_conditions, run_environmental
 import read_dotenv  # noqa
 
 
-CUR_DIR = Path(__file__).parent
+CUR_DIR = Path(__file__).parent.resolve()
 ROOT_DIR = CUR_DIR.parent
 SERVER_LOG = ROOT_DIR / "server.log"
 CAMERA_LOG = ROOT_DIR / "camera.log"
+
+PREVIOUS_LOGS_DIR = ROOT_DIR / 'previous_logs'
+PREVIOUS_LOGS_DIR.mkdir(exist_ok=True)
+now_str = datetime.utcnow().isoformat()
+for log in [SERVER_LOG, CAMERA_LOG]:
+    log.rename(PREVIOUS_LOGS_DIR / f"{log.stem}.before.{now_str}.log")
 
 # logging setup
 # see https://docs.python.org/3/library/logging.html#logging.basicConfig
