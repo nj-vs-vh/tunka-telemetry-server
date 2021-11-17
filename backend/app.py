@@ -11,7 +11,7 @@ from pyindigo.core import IndigoLogLevel, set_indigo_log_level
 
 from camera_adapter import CameraAdapter
 import camera_config
-from observation_conditions import get_observation_conditions, EnvironmentalConditionsReadingProtocol
+from observation_conditions import get_observation_conditions, run_environmental_conditions_monitor
 
 import read_dotenv  # noqa
 
@@ -41,7 +41,7 @@ if native_inidgo_log_level:
 # loop setup, non-Quart tasks startup
 loop = asyncio.get_event_loop()
 if os.environ.get("READ_FROM_TTY_CONTROLLER", None) == "yes":
-    EnvironmentalConditionsReadingProtocol.activate(loop)
+    run_environmental_conditions_monitor(loop)
 camera = CameraAdapter(mode=os.environ.get("CAMERA_MODE", None), loop=loop)
 loop.create_task(camera.operate())
 loop.create_task(camera_config.update_on_the_fly())
@@ -90,6 +90,7 @@ try:
         config.bind = f'0.0.0.0:{PORT}'
         config.workers = 1
         config.errorlog = str(SERVER_LOG.resolve())
+        config.accesslog = str(SERVER_LOG.resolve())
         loop.run_until_complete(serve(app, config))
     elif serve_with == "Quart_run":
         app.run(debug=False, use_reloader=False, loop=loop, port=PORT)

@@ -1,12 +1,12 @@
 import asyncio
 import serial_asyncio
 from serial.serialutil import SerialException
-
+import re
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-import re
-from dataclasses import dataclass
+from asyncio.events import AbstractEventLoop
 from typing import List, Optional, Dict
 
 from pyindigo import logging
@@ -93,7 +93,7 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
         self.buffer = bytes()
 
     @classmethod
-    def activate(cls, loop):
+    def activate(cls, loop: AbstractEventLoop):
         """Activate protocol = start listening for serial messages while attached to the given loop"""
         try:
             loop.run_until_complete(serial_asyncio.create_serial_connection(loop, cls, CONTROLLER_TTY))
@@ -188,6 +188,10 @@ class EnvironmentalConditionsReadingProtocol(asyncio.Protocol):
 
     def resume_writing(self):
         pass
+
+
+def run_environmental_conditions_monitor(loop: AbstractEventLoop):
+    EnvironmentalConditionsReadingProtocol.activate(loop)
 
 
 if __name__ == "__main__":
